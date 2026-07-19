@@ -36,6 +36,7 @@ export default function QuotationBuilder({ onSaved }) {
   const [basisColumnLabel, setBasisColumnLabel] = useState("PER TR");
   const [items, setItems] = useState([]);
   const [terms, setTerms] = useState(defaultTermsFor("product", settings));
+  const [gstRatePct, setGstRatePct] = useState(settings.gstRate);
 
   const [savedDoc, setSavedDoc] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
@@ -73,7 +74,7 @@ export default function QuotationBuilder({ onSaved }) {
         basis: "",
         qty: 1,
         rate: product?.rate || 0,
-        gstRate: product?.gst ?? settings.gstRate,
+        gstRate: product?.gst ?? gstRatePct,
       },
     ]);
   }
@@ -85,7 +86,7 @@ export default function QuotationBuilder({ onSaved }) {
   }
 
   const subtotal = items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.rate || 0), 0);
-  const gstTotal = (subtotal * Number(settings.gstRate)) / 100;
+  const gstTotal = (subtotal * Number(gstRatePct || 0)) / 100;
   const total = subtotal + gstTotal;
   const customer = customers.find((c) => c.id === customerId);
 
@@ -116,7 +117,7 @@ export default function QuotationBuilder({ onSaved }) {
       sgst: gstTotal / 2,
       gst: gstTotal,
       total,
-      gstRate: settings.gstRate,
+      gstRate: Number(gstRatePct || 0),
       amountInWords: amountInWords(total),
       company: settings,
       showSubtotal: variant !== "service_breakdown",
@@ -217,17 +218,26 @@ export default function QuotationBuilder({ onSaved }) {
                   className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                 />
               </div>
-              {variant !== "product" && (
-                <div>
-                  <label className="text-xs font-semibold text-ink/60">Heading (shown above the item table)</label>
-                  <input
-                    value={heading}
-                    onChange={(e) => setHeading(e.target.value)}
-                    placeholder='e.g. "Subject: Quotation for Condenser Descaling of chiller"'
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="text-xs font-semibold text-ink/60">GST %</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={gstRatePct}
+                  onChange={(e) => setGstRatePct(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-ink/60">Subject (shown above the item table)</label>
+                <input
+                  value={heading}
+                  onChange={(e) => setHeading(e.target.value)}
+                  placeholder='e.g. "Subject: Quotation for Condenser Descaling of chiller"'
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
               {variant === "service_breakdown" && (
                 <div>
                   <label className="text-xs font-semibold text-ink/60">Rate-basis column label</label>
@@ -321,7 +331,7 @@ export default function QuotationBuilder({ onSaved }) {
                     placeholder="Rate"
                   />
                   <div className="col-span-1 text-right text-ink/60 text-xs">
-                    {formatINR(it.qty * it.rate * (1 + (it.gstRate ?? settings.gstRate) / 100))}
+                    {formatINR(it.qty * it.rate * (1 + (it.gstRate ?? gstRatePct) / 100))}
                   </div>
                   <button onClick={() => removeItem(it.id)} className="col-span-12 sm:col-span-1 text-red-400 hover:text-red-500 flex justify-end">
                     <Trash2 size={15} />
@@ -410,7 +420,7 @@ export default function QuotationBuilder({ onSaved }) {
                   <td className="px-3 py-1 text-right font-medium">{formatINR(subtotal)}</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-1 text-ink/60">GST ({settings.gstRate}%)</td>
+                  <td className="px-3 py-1 text-ink/60">GST ({gstRatePct}%)</td>
                   <td className="px-3 py-1 text-right font-medium">{formatINR(gstTotal)}</td>
                 </tr>
                 <tr className="border-t border-ink/10">

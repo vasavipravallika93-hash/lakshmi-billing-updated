@@ -18,12 +18,13 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState("");
   const [items] = useState(sourceDoc?.items || []);
+  const [gstRatePct, setGstRatePct] = useState(sourceDoc?.gstRate ?? settings.gstRate);
   const [savedDoc, setSavedDoc] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const printRef = useRef(null);
 
-  const totals = calcTotals(items, settings.gstRate);
+  const totals = calcTotals(items, gstRatePct);
   const customer = sourceDoc?.customer || null;
 
   function buildDocObject(number) {
@@ -37,7 +38,7 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
       subtotal: totals.subtotal,
       gst: totals.gst,
       total: totals.total,
-      gstRate: settings.gstRate,
+      gstRate: Number(gstRatePct || 0),
       amountInWords: amountInWords(totals.total),
       company: settings,
       status: type === "invoice" ? "Unpaid" : "Draft",
@@ -137,6 +138,17 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
                   />
                 </div>
               )}
+              <div>
+                <label className="text-xs font-semibold text-ink/60">GST %</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={gstRatePct}
+                  onChange={(e) => setGstRatePct(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
             </div>
           </div>
 
@@ -157,7 +169,7 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
                     <td className="py-1.5">{it.description}</td>
                     <td className="py-1.5 text-right">{it.qty}</td>
                     <td className="py-1.5 text-right">{formatINR(it.rate)}</td>
-                    <td className="py-1.5 text-right">{formatINR(it.qty * it.rate * (1 + (it.gstRate ?? settings.gstRate) / 100))}</td>
+                    <td className="py-1.5 text-right">{formatINR(it.qty * it.rate * (1 + (it.gstRate ?? gstRatePct) / 100))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -172,7 +184,7 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
                   <td className="px-3 py-1 text-right font-medium">{formatINR(totals.subtotal)}</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-1 text-ink/60">GST ({settings.gstRate}%)</td>
+                  <td className="px-3 py-1 text-ink/60">GST ({gstRatePct}%)</td>
                   <td className="px-3 py-1 text-right font-medium">{formatINR(totals.gst)}</td>
                 </tr>
                 <tr className="border-t border-ink/10">

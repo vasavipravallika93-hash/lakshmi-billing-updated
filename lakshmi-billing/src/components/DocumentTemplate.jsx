@@ -86,27 +86,27 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         <table className="w-full mt-3.5 text-xs border-collapse">
           <thead>
             <tr className="bg-[#1ba64b] text-white">
-              <th className="border border-[#1ba64b] px-1.5 py-1.5 w-8">S.No</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5 text-left">MATERIALS</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5">MAKE</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5">HSN</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5">QTY/ charges</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5">RATE</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5">GST</th>
-              <th className="border border-[#1ba64b] px-1.5 py-1.5 text-right">TOTAL</th>
+              <th className="border border-[#1ba64b] px-2 py-2 leading-snug w-8">S.No</th>
+              <th className="border border-[#1ba64b] px-2.5 py-2 leading-snug text-left">MATERIALS</th>
+              <th className="border border-[#1ba64b] px-2 py-2 leading-snug">MAKE</th>
+              <th className="border border-[#1ba64b] px-2 py-2 leading-snug">HSN</th>
+              <th className="border border-[#1ba64b] px-2 py-2 leading-snug">QTY/ charges</th>
+              <th className="border border-[#1ba64b] px-2 py-2 leading-snug">RATE</th>
+              <th className="border border-[#1ba64b] px-2 py-2 leading-snug">GST</th>
+              <th className="border border-[#1ba64b] px-2.5 py-2 leading-snug text-right">TOTAL</th>
             </tr>
           </thead>
           <tbody>
             {items.map((it, i) => (
               <tr key={i}>
-                <td className="border border-[#ccc] px-1.5 py-1 text-center">{i + 1}</td>
-                <td className="border border-[#ccc] px-1.5 py-1">{it.description}</td>
-                <td className="border border-[#ccc] px-1.5 py-1 text-center">{it.make || "-"}</td>
-                <td className="border border-[#ccc] px-1.5 py-1 text-center">{it.hsn}</td>
-                <td className="border border-[#ccc] px-1.5 py-1 text-center">{it.qty}</td>
-                <td className="border border-[#ccc] px-1.5 py-1 text-center">{Number(it.rate).toFixed(2)}</td>
-                <td className="border border-[#ccc] px-1.5 py-1 text-center">{it.gstRate ?? doc.gstRate}%</td>
-                <td className="border border-[#ccc] px-1.5 py-1 text-right whitespace-nowrap">
+                <td className="border border-[#ccc] px-2 py-2 leading-snug text-center align-top">{i + 1}</td>
+                <td className="border border-[#ccc] px-2.5 py-2 leading-snug align-top">{it.description}</td>
+                <td className="border border-[#ccc] px-2 py-2 leading-snug text-center align-top">{it.make || "-"}</td>
+                <td className="border border-[#ccc] px-2 py-2 leading-snug text-center align-top">{it.hsn}</td>
+                <td className="border border-[#ccc] px-2 py-2 leading-snug text-center align-top">{it.qty}</td>
+                <td className="border border-[#ccc] px-2 py-2 leading-snug text-center align-top">{Number(it.rate).toFixed(2)}</td>
+                <td className="border border-[#ccc] px-2 py-2 leading-snug text-center align-top">{it.gstRate ?? doc.gstRate}%</td>
+                <td className="border border-[#ccc] px-2.5 py-2 leading-snug text-right align-top whitespace-nowrap">
                   {formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? doc.gstRate) / 100))}
                 </td>
               </tr>
@@ -133,11 +133,11 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             </div>
           </div>
           <div className="w-[280px] shrink-0">
-            <div className="flex justify-between text-[12.5px] px-1 py-0.5">
+            <div className="flex justify-between text-[12.5px] px-1.5 py-1 leading-snug">
               <span>Sub Total:</span>
               <span>{formatINR(doc.subtotal)}</span>
             </div>
-            <div className="flex justify-between text-[12.5px] px-1 py-0.5">
+            <div className="flex justify-between text-[12.5px] px-1.5 py-1 leading-snug">
               <span>GST {doc.gstRate}%</span>
               <span>{formatINR(doc.gst)}</span>
             </div>
@@ -148,7 +148,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           </div>
         </div>
 
-        <div className="bg-[#d9d9d9] text-[11.5px] px-2.5 py-1.5 mt-4">
+        <div className="bg-[#d9d9d9] text-[11.5px] px-3 py-2 leading-snug mt-4">
           We declare that this invoice shows the actual price of the goods described and that all particulars are true and
           correct.
         </div>
@@ -157,7 +157,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           <img src={company.stampDataUrl || defaultStamp} alt="stamp and signature" className="h-16 object-contain" />
         </div>
 
-        <div className="bg-[#d9d9d9] flex justify-between items-center px-4 py-2.5 mt-2 text-xs">
+        <div className="bg-[#d9d9d9] flex justify-between items-center px-4 py-3 mt-2 text-xs leading-snug">
           <div>This is a Computer Generated Invoice</div>
           <div className="text-right">
             <div className="font-bold text-[13.5px]">{company.companyName}</div>
@@ -193,30 +193,30 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         <table className="text-xs border-collapse h-fit shrink-0">
           <tbody>
             <tr>
-              <td className="px-2.5 py-0.5 border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">DATE</td>
-              <td className="px-2.5 py-0.5 border border-black/70">{doc.date}</td>
+              <td className="px-2.5 py-1 leading-snug border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">DATE</td>
+              <td className="px-2.5 py-1 leading-snug border border-black/70">{doc.date}</td>
             </tr>
             <tr>
-              <td className="px-2.5 py-0.5 border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">INVOICE #</td>
-              <td className="px-2.5 py-0.5 border border-black/70">{doc.number}</td>
+              <td className="px-2.5 py-1 leading-snug border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">INVOICE #</td>
+              <td className="px-2.5 py-1 leading-snug border border-black/70">{doc.number}</td>
             </tr>
             {customer.customerId && (
               <tr>
-                <td className="px-2.5 py-0.5 border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">CUSTOMER ID</td>
-                <td className="px-2.5 py-0.5 border border-black/70">{customer.customerId}</td>
+                <td className="px-2.5 py-1 leading-snug border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">CUSTOMER ID</td>
+                <td className="px-2.5 py-1 leading-snug border border-black/70">{customer.customerId}</td>
               </tr>
             )}
             {doc.dueDate && (
               <tr>
-                <td className="px-2.5 py-0.5 border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">DUE DATE</td>
-                <td className="px-2.5 py-0.5 border border-black/70">{doc.dueDate}</td>
+                <td className="px-2.5 py-1 leading-snug border border-black/70 bg-[#fafafa] font-bold whitespace-nowrap">DUE DATE</td>
+                <td className="px-2.5 py-1 leading-snug border border-black/70">{doc.dueDate}</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="bg-[#1ba64b] text-white font-bold text-xs px-2 py-0.5 mt-3">BILL TO</div>
+      <div className="bg-[#1ba64b] text-white font-bold text-xs px-2.5 py-1 leading-snug mt-3">BILL TO</div>
       <div className="text-xs leading-[1.45] pt-1">
         <div className="font-bold">{customer.name}</div>
         <div>{customer.address}</div>
@@ -227,27 +227,27 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       <table className="w-full mt-3 text-xs border-collapse">
         <thead>
           <tr className="bg-[#1ba64b] text-white">
-            <th className="border border-[#1ba64b] px-1.5 py-1.5 w-8">S.No</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5 text-left">DESCRIPTION</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5">HSN code</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5">Brand</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5">QTY</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5">RATE</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5">GST</th>
-            <th className="border border-[#1ba64b] px-1.5 py-1.5 text-right">AMOUNT</th>
+            <th className="border border-[#1ba64b] px-2 py-2 leading-snug w-8">S.No</th>
+            <th className="border border-[#1ba64b] px-2.5 py-2 leading-snug text-left">DESCRIPTION</th>
+            <th className="border border-[#1ba64b] px-2 py-2 leading-snug">HSN code</th>
+            <th className="border border-[#1ba64b] px-2 py-2 leading-snug">Brand</th>
+            <th className="border border-[#1ba64b] px-2 py-2 leading-snug">QTY</th>
+            <th className="border border-[#1ba64b] px-2 py-2 leading-snug">RATE</th>
+            <th className="border border-[#1ba64b] px-2 py-2 leading-snug">GST</th>
+            <th className="border border-[#1ba64b] px-2.5 py-2 leading-snug text-right">AMOUNT</th>
           </tr>
         </thead>
         <tbody>
           {items.map((it, i) => (
             <tr key={i} className={i % 2 ? "bg-[#f2f2f2]" : ""}>
-              <td className="border border-[#ddd] px-1.5 py-1 text-center">{i + 1}</td>
-              <td className="border border-[#ddd] px-1.5 py-1">{it.description}</td>
-              <td className="border border-[#ddd] px-1.5 py-1 text-center">{it.hsn}</td>
-              <td className="border border-[#ddd] px-1.5 py-1 text-center">{it.make || it.unit || "Nos"}</td>
-              <td className="border border-[#ddd] px-1.5 py-1 text-center">{it.qty}</td>
-              <td className="border border-[#ddd] px-1.5 py-1 text-center">{Number(it.rate).toFixed(2)}</td>
-              <td className="border border-[#ddd] px-1.5 py-1 text-center">{it.gstRate ?? doc.gstRate}%</td>
-              <td className="border border-[#ddd] px-1.5 py-1 text-right whitespace-nowrap">
+              <td className="border border-[#ddd] px-2 py-2 leading-snug text-center align-top">{i + 1}</td>
+              <td className="border border-[#ddd] px-2.5 py-2 leading-snug align-top">{it.description}</td>
+              <td className="border border-[#ddd] px-2 py-2 leading-snug text-center align-top">{it.hsn}</td>
+              <td className="border border-[#ddd] px-2 py-2 leading-snug text-center align-top">{it.make || it.unit || "Nos"}</td>
+              <td className="border border-[#ddd] px-2 py-2 leading-snug text-center align-top">{it.qty}</td>
+              <td className="border border-[#ddd] px-2 py-2 leading-snug text-center align-top">{Number(it.rate).toFixed(2)}</td>
+              <td className="border border-[#ddd] px-2 py-2 leading-snug text-center align-top">{it.gstRate ?? doc.gstRate}%</td>
+              <td className="border border-[#ddd] px-2.5 py-2 leading-snug text-right align-top whitespace-nowrap">
                 {formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? doc.gstRate) / 100))}
               </td>
             </tr>
@@ -261,15 +261,15 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           <div>{doc.amountInWords}</div>
         </div>
         <div className="w-[260px] shrink-0">
-          <div className="flex justify-between bg-[#dce8f0] px-2.5 py-1 text-[12.5px] font-bold mb-0.5">
+          <div className="flex justify-between bg-[#dce8f0] px-2.5 py-1.5 leading-snug text-[12.5px] font-bold mb-1">
             <span>Sub Total:</span>
             <span>{formatINR(doc.subtotal)}</span>
           </div>
-          <div className="flex justify-between bg-[#dce8f0] px-2.5 py-1 text-[12.5px] font-bold mb-0.5">
+          <div className="flex justify-between bg-[#dce8f0] px-2.5 py-1.5 leading-snug text-[12.5px] font-bold mb-1">
             <span>GST {doc.gstRate}%:</span>
             <span>{formatINR(doc.gst)}</span>
           </div>
-          <div className="flex justify-between bg-[#1ba64b] text-white px-2.5 py-1 text-[15px] font-bold">
+          <div className="flex justify-between bg-[#1ba64b] text-white px-2.5 py-2 leading-snug text-[15px] font-bold">
             <span>TOTAL</span>
             <span>{formatINR(doc.total)}</span>
           </div>
