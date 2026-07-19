@@ -253,6 +253,14 @@ export function amountInWords(amount) {
   return `INR - ${words}`;
 }
 
+export function formatDateDMY(value) {
+  if (!value) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (!m) return value;
+  const [, y, mo, d] = m;
+  return `${d}-${mo}-${y}`;
+}
+
 export function formatINR(n) {
   return `₹ ${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
