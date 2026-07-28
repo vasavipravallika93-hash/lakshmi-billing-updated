@@ -37,6 +37,7 @@ export default function QuotationBuilder({ onSaved }) {
   const [items, setItems] = useState([]);
   const [terms, setTerms] = useState(defaultTermsFor("product", settings));
   const [gstRatePct, setGstRatePct] = useState(settings.gstRate);
+  const [manualNumber, setManualNumber] = useState("");
 
   const [savedDoc, setSavedDoc] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
@@ -132,7 +133,7 @@ export default function QuotationBuilder({ onSaved }) {
     if (!customer) return alert("Please select a customer.");
     if (items.length === 0) return alert("Add at least one item.");
 
-    const number = savedDoc?.number || db.nextDocNumber("quotation");
+    const number = savedDoc?.number || manualNumber.trim() || db.nextDocNumber("quotation");
     const doc = buildDocObject(number);
     db.saveQuotation(doc);
 
@@ -227,6 +228,18 @@ export default function QuotationBuilder({ onSaved }) {
                   value={gstRatePct}
                   onChange={(e) => setGstRatePct(e.target.value)}
                   className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-ink/60">
+                  Quote # {savedDoc && "(locked — already generated)"}
+                </label>
+                <input
+                  value={savedDoc ? savedDoc.number : manualNumber}
+                  onChange={(e) => setManualNumber(e.target.value)}
+                  disabled={!!savedDoc}
+                  placeholder="Leave blank to auto-generate"
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 disabled:bg-ink/5 disabled:text-ink/40"
                 />
               </div>
               <div className="col-span-2">
