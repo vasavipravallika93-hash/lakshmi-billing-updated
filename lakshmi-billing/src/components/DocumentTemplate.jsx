@@ -30,7 +30,8 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
 
   if (type === "proforma") {
     return (
-      <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", border: "2px solid #000", padding: 14 }}>
+      <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", padding: 46 }}>
+      <div style={{ border: "2px solid #000", boxSizing: "border-box", padding: 12 }}>
       <div
         style={{
           color: "#0f1a14",
@@ -221,12 +222,14 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         </div>
       </div>
       </div>
+      </div>
     );
   }
 
   // ---- invoice (default) ----
   return (
-    <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", border: "2px solid #000", padding: 14 }}>
+    <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", padding: 46 }}>
+      <div style={{ border: "2px solid #000", boxSizing: "border-box", padding: 12 }}>
     <div
       style={{
         color: "#0f1a14",
@@ -440,6 +443,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       <div style={{ textAlign: "center", fontSize: 9.5, color: "rgba(0,0,0,0.6)", padding: "6px 0" }}>
         This is Computer Generated Invoice
       </div>
+    </div>
     </div>
     </div>
   );

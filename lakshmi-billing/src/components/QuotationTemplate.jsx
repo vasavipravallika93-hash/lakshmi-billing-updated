@@ -48,10 +48,16 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
         background: "#fff",
         width: 794,
         boxSizing: "border-box",
-        border: "2px solid #000",
-        padding: 14,
+        padding: 46,
       }}
     >
+      <div
+        style={{
+          border: "2px solid #000",
+          boxSizing: "border-box",
+          padding: 12,
+        }}
+      >
       <div
         style={{
           color: "#0f1a14",
@@ -469,6 +475,7 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
             BRANCH &amp; IFS Code: {company.branchIfsc}
           </div>
         </div>
+      </div>
       </div>
       </div>
     </div>
