@@ -46,40 +46,47 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
       ref={ref}
       style={{
         background: "#fff",
-        color: "#0f1a14",
         width: 794,
         boxSizing: "border-box",
-        fontFamily: "Inter, system-ui, sans-serif",
-        border: `2px solid ${BORDER}`,
-        borderRadius: 5,
-        padding: "14px 22px 16px",
+        border: "2px solid #000",
+        padding: 14,
       }}
     >
+      <div
+        style={{
+          color: "#0f1a14",
+          boxSizing: "border-box",
+          fontFamily: "Inter, system-ui, sans-serif",
+          border: `2px solid ${BORDER}`,
+          borderRadius: 5,
+          padding: "14px 22px 16px",
+        }}
+      >
       {/* header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 46, objectFit: "contain" }} />
         <table style={{ fontSize: 11, borderCollapse: "collapse" }}>
           <tbody>
             <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700 }}>DATE</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px" }}>{formatDateDMY(doc.date)}</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>DATE</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
             </tr>
             <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700 }}>QUOTE #</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px" }}>{doc.number}</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>QUOTE #</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", textAlign: "center" }}>{doc.number}</td>
             </tr>
             <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700 }}>VALID UNTIL</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px" }}>{formatDateDMY(doc.validUntil)}</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>VALID UNTIL</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* company block */}
-      <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.35 }}>
+      <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.4 }}>
         <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-        <div>{company.address}</div>
+        <div style={{ whiteSpace: "pre-line" }}>{company.address}</div>
         <div>Phone No- {company.phone}</div>
         <div>Mail- {company.email}</div>
         <div>GST No- {company.gst}</div>
@@ -88,10 +95,11 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
       {/* customer block */}
       <div
         style={{
+          display: "inline-block",
           fontSize: 11,
           fontWeight: 700,
           textAlign: "center",
-          padding: "3px 8px",
+          padding: "3px 20px",
           lineHeight: 1.25,
           marginTop: 8,
           border: `1px solid ${BORDER}`,
@@ -102,7 +110,7 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
       </div>
       <div style={{ fontSize: 11, lineHeight: 1.35, paddingTop: 4 }}>
         <div style={{ fontWeight: 700 }}>{customer.name}</div>
-        <div>{customer.address}</div>
+        <div style={{ whiteSpace: "pre-line" }}>{customer.address}</div>
         {customer.phone && <div>Ph: {customer.phone}</div>}
         {customer.gst && <div>GST No- {customer.gst}</div>}
       </div>
@@ -224,6 +232,18 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
             >
               <span>TOTAL</span>
               <span>{formatINR(doc.total)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
+              <div style={{ textAlign: "center", width: 200 }}>
+                <img
+                  src={company.stampDataUrl || defaultStamp}
+                  alt="stamp and signature"
+                  style={{ height: 66, objectFit: "contain", margin: "0 auto 4px" }}
+                />
+                <div style={{ fontSize: 10.5, fontWeight: 700, borderTop: "1px solid rgba(0,0,0,0.6)", paddingTop: 4 }}>
+                  Authorised Signatory
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -402,21 +422,17 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
               <span>TOTAL</span>
               <span>{formatINR(doc.total)}</span>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* sign area — product variant already places its stamp beside the total */}
-      {variant !== "product" && (
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
-          <div style={{ textAlign: "center", width: 200 }}>
-            <img
-              src={company.stampDataUrl || defaultStamp}
-              alt="stamp and signature"
-              style={{ height: 48, objectFit: "contain", margin: "0 auto 4px" }}
-            />
-            <div style={{ fontSize: 10.5, fontWeight: 700, borderTop: "1px solid rgba(0,0,0,0.6)", paddingTop: 4 }}>
-              Authorised Signatory
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
+              <div style={{ textAlign: "center", width: 200 }}>
+                <img
+                  src={company.stampDataUrl || defaultStamp}
+                  alt="stamp and signature"
+                  style={{ height: 66, objectFit: "contain", margin: "0 auto 4px" }}
+                />
+                <div style={{ fontSize: 10.5, fontWeight: 700, borderTop: "1px solid rgba(0,0,0,0.6)", paddingTop: 4 }}>
+                  Authorised Signatory
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -453,6 +469,7 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
             BRANCH &amp; IFS Code: {company.branchIfsc}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

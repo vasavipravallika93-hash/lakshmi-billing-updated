@@ -30,12 +30,10 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
 
   if (type === "proforma") {
     return (
+      <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", border: "2px solid #000", padding: 14 }}>
       <div
-        ref={ref}
         style={{
-          background: "#fff",
           color: "#0f1a14",
-          width: 794,
           boxSizing: "border-box",
           fontFamily: "Inter, system-ui, sans-serif",
           border: `2px solid ${GREEN}`,
@@ -77,7 +75,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         {/* company block */}
         <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.35 }}>
           <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-          <div>{company.address}</div>
+          <div style={{ whiteSpace: "pre-line" }}>{company.address}</div>
           <div>Phone No- {company.phone}</div>
           <div>Mail- {company.email}</div>
           <div>GST No- {company.gst}</div>
@@ -92,7 +90,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             </div>
             <div style={{ fontSize: 10.5, lineHeight: 1.3 }}>
               <div style={{ fontWeight: 600 }}>{customer.name}</div>
-              <div>{customer.address}</div>
+              <div style={{ whiteSpace: "pre-line" }}>{customer.address}</div>
               {customer.phone && <div>Ph: {customer.phone}</div>}
               {customer.gst && <div>GST No- {customer.gst}</div>}
             </div>
@@ -103,7 +101,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             </div>
             <div style={{ fontSize: 10.5, lineHeight: 1.3 }}>
               <div style={{ fontWeight: 600 }}>{customer.name}</div>
-              <div>{customer.address}</div>
+              <div style={{ whiteSpace: "pre-line" }}>{customer.address}</div>
               {customer.phone && <div>Ph: {customer.phone}</div>}
               {customer.gst && <div>GST No- {customer.gst}</div>}
             </div>
@@ -166,7 +164,15 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
               <span>{formatINR(doc.subtotal)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, padding: "2px 4px" }}>
-              <span>GST {gstRate}%</span>
+              <span>CGST {gstRate / 2}%:</span>
+              <span>{formatINR(doc.gst / 2)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, padding: "2px 4px" }}>
+              <span>SGST {gstRate / 2}%:</span>
+              <span>{formatINR(doc.gst / 2)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, padding: "2px 4px" }}>
+              <span>GST {gstRate}%:</span>
               <span>{formatINR(doc.gst)}</span>
             </div>
             <div
@@ -185,16 +191,15 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
               <span>TOTAL</span>
               <span>{formatINR(doc.total)}</span>
             </div>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 10 }}>
+              <img src={company.stampDataUrl || defaultStamp} alt="stamp and signature" style={{ height: 66, objectFit: "contain" }} />
+            </div>
           </div>
         </div>
 
         <div style={{ background: "#d9d9d9", fontSize: 10.5, padding: "6px 8px", marginTop: 10, lineHeight: 1.3 }}>
           We declare that this invoice shows the actual price of the goods described and that all particulars are true and
           correct.
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-          <img src={company.stampDataUrl || defaultStamp} alt="stamp and signature" style={{ height: 40, objectFit: "contain" }} />
         </div>
 
         <div
@@ -215,17 +220,16 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           </div>
         </div>
       </div>
+      </div>
     );
   }
 
   // ---- invoice (default) ----
   return (
+    <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", border: "2px solid #000", padding: 14 }}>
     <div
-      ref={ref}
       style={{
-        background: "#fff",
         color: "#0f1a14",
-        width: 794,
         boxSizing: "border-box",
         fontFamily: "Inter, system-ui, sans-serif",
         border: `2px solid ${GREEN}`,
@@ -242,7 +246,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, gap: 20 }}>
         <div style={{ fontSize: 11, lineHeight: 1.3 }}>
           <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-          <div>{company.address}</div>
+          <div style={{ whiteSpace: "pre-line" }}>{company.address}</div>
           <div>Phone No- {company.phone}</div>
           <div>Mail- {company.email}</div>
           <div>GST No- {company.gst}</div>
@@ -251,41 +255,41 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         <table style={{ fontSize: 11, borderCollapse: "collapse", height: "fit-content", flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap" }}>
+              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                 DATE
               </td>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)" }}>{formatDateDMY(doc.date)}</td>
+              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
             </tr>
             <tr>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap" }}>
+              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                 INVOICE #
               </td>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)" }}>{doc.number}</td>
+              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{doc.number}</td>
             </tr>
             {customer.customerId && (
               <tr>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap" }}>
+                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                   CUSTOMER ID
                 </td>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)" }}>{customer.customerId}</td>
+                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{customer.customerId}</td>
               </tr>
             )}
             {doc.dueDate && (
               <tr>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap" }}>
+                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                   DUE DATE
                 </td>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)" }}>{formatDateDMY(doc.dueDate)}</td>
+                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{formatDateDMY(doc.dueDate)}</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div style={{ background: GREEN, color: "#fff", fontWeight: 700, fontSize: 12, padding: "4px 8px", marginTop: 8 }}>BILL TO</div>
+      <div style={{ display: "inline-block", background: GREEN, color: "#fff", fontWeight: 700, fontSize: 12, textAlign: "center", padding: "4px 20px", marginTop: 8 }}>BILL TO</div>
       <div style={{ fontSize: 11, lineHeight: 1.3, paddingTop: 4 }}>
         <div style={{ fontWeight: 700 }}>{customer.name}</div>
-        <div>{customer.address}</div>
+        <div style={{ whiteSpace: "pre-line" }}>{customer.address}</div>
         {customer.phone && <div>Ph: {customer.phone}</div>}
         {customer.gst && <div>GST NO- {customer.gst}</div>}
       </div>
@@ -352,6 +356,34 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
               marginBottom: 2,
             }}
           >
+            <span>CGST {gstRate / 2}%:</span>
+            <span>{formatINR(doc.gst / 2)}</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              background: "#dce8f0",
+              padding: "4px 8px",
+              fontSize: 11.5,
+              fontWeight: 700,
+              marginBottom: 2,
+            }}
+          >
+            <span>SGST {gstRate / 2}%:</span>
+            <span>{formatINR(doc.gst / 2)}</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              background: "#dce8f0",
+              padding: "4px 8px",
+              fontSize: 11.5,
+              fontWeight: 700,
+              marginBottom: 2,
+            }}
+          >
             <span>GST {gstRate}%:</span>
             <span>{formatINR(doc.gst)}</span>
           </div>
@@ -373,11 +405,11 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
-        <div style={{ textAlign: "center", width: 200 }}>
+        <div style={{ textAlign: "center", width: 220 }}>
           <img
             src={company.stampDataUrl || defaultStamp}
             alt="stamp and signature"
-            style={{ height: 40, objectFit: "contain", margin: "0 auto 3px" }}
+            style={{ height: 66, objectFit: "contain", margin: "0 auto 4px" }}
           />
           <div style={{ fontSize: 10.5, lineHeight: 1.3 }}>
             Make all checks payable to
@@ -408,6 +440,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       <div style={{ textAlign: "center", fontSize: 9.5, color: "rgba(0,0,0,0.6)", padding: "6px 0" }}>
         This is Computer Generated Invoice
       </div>
+    </div>
     </div>
   );
 });

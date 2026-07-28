@@ -37,6 +37,11 @@ export const productsApi = {
     if (error) throw error;
     return fromRow(data);
   },
+  async saveMany(products) {
+    const { data, error } = await supabase.from("products").upsert(products.map(toRow)).select();
+    if (error) throw error;
+    return (data || []).map(fromRow);
+  },
   async remove(id) {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) throw error;
