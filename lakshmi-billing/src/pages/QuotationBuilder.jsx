@@ -7,7 +7,7 @@ import { downloadNodeAsPdf } from "../lib/pdf";
 import { appsScript } from "../lib/appsScript";
 import QuotationTemplate from "../components/QuotationTemplate";
 import VerifyModal from "../components/VerifyModal";
-import { Plus, Trash2, FileDown, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, FileDown, Save, Loader2, Search } from "lucide-react";
 
 const VARIANTS = [
   { key: "product", label: "Product / Parts Supply" },
@@ -255,24 +255,7 @@ export default function QuotationBuilder({ onSaved }) {
           <div className="bg-white rounded-xl2 shadow-card p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-display font-semibold">Items</h3>
-              <select
-                onChange={(e) => {
-                  const p = products.find((p) => p.id === e.target.value);
-                  if (p) addItem(p);
-                  e.target.value = "";
-                }}
-                className="text-sm px-3 py-1.5 rounded-lg border border-ink/10"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  {loadingRefs ? "Loading…" : "+ Add product…"}
-                </option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <ProductSearchAdd products={products} loading={loadingRefs} onPick={addItem} />
             </div>
 
             <div className="space-y-2">
@@ -472,6 +455,71 @@ export default function QuotationBuilder({ onSaved }) {
           onDownload={handleDownload}
           onClose={() => setVerifyResult(null)}
         />
+      )}
+    </div>
+  );
+}
+
+// Searchable "+ Add product…" combobox — type to filter by name/HSN/brand,
+// click a result to add it as a line item.
+function ProductSearchAdd({ products, loading, onPick }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const boxRef = useRef(null);
+
+  useEffect(() => {
+    function onDocClick(e) {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const matches = query.trim()
+    ? products.filter((p) => [p.name, p.hsn, p.brand].join(" ").toLowerCase().includes(query.toLowerCase()))
+    : products;
+
+  function pick(p) {
+    onPick(p);
+    setQuery("");
+    setOpen(false);
+  }
+
+  return (
+    <div className="relative w-64" ref={boxRef}>
+      <div className="relative">
+        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/30" />
+        <input
+          value={query}
+          onFocus={() => setOpen(true)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          placeholder={loading ? "Loading…" : "Search & add product…"}
+          disabled={loading}
+          className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-ink/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+        />
+      </div>
+      {open && !loading && (
+        <div className="absolute right-0 z-20 mt-1 w-72 max-h-64 overflow-auto bg-white rounded-lg border border-ink/10 shadow-pop">
+          {matches.length === 0 && <div className="px-3 py-2.5 text-sm text-ink/40">No products match.</div>}
+          {matches.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => pick(p)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50 border-b border-ink/5 last:border-b-0"
+            >
+              <div className="font-medium">{p.name}</div>
+              <div className="text-xs text-ink/40">
+                {p.hsn && `HSN ${p.hsn}`}
+                {p.hsn && p.brand ? " · " : ""}
+                {p.brand}
+              </div>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );

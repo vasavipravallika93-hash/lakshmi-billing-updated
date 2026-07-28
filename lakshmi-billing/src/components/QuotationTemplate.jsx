@@ -68,25 +68,25 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
         <table style={{ fontSize: 11, borderCollapse: "collapse" }}>
           <tbody>
             <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>DATE</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>DATE</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
             </tr>
             <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>QUOTE #</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", textAlign: "center" }}>{doc.number}</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>QUOTE #</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", textAlign: "center" }}>{doc.number}</td>
             </tr>
             <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>VALID UNTIL</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "3px 8px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>VALID UNTIL</td>
+              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* company block */}
-      <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.4 }}>
+      <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.4, maxWidth: 340 }}>
         <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-        <div style={{ whiteSpace: "pre-line" }}>{company.address}</div>
+        <div>{company.address}</div>
         <div>Phone No- {company.phone}</div>
         <div>Mail- {company.email}</div>
         <div>GST No- {company.gst}</div>

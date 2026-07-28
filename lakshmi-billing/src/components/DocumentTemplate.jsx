@@ -73,9 +73,9 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         </div>
 
         {/* company block */}
-        <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.35 }}>
+        <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.4, maxWidth: 340 }}>
           <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-          <div style={{ whiteSpace: "pre-line" }}>{company.address}</div>
+          <div>{company.address}</div>
           <div>Phone No- {company.phone}</div>
           <div>Mail- {company.email}</div>
           <div>GST No- {company.gst}</div>
@@ -246,7 +246,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, gap: 20 }}>
         <div style={{ fontSize: 11, lineHeight: 1.3 }}>
           <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-          <div style={{ whiteSpace: "pre-line" }}>{company.address}</div>
+          <div>{company.address}</div>
           <div>Phone No- {company.phone}</div>
           <div>Mail- {company.email}</div>
           <div>GST No- {company.gst}</div>
@@ -255,31 +255,31 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         <table style={{ fontSize: 11, borderCollapse: "collapse", height: "fit-content", flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
+              <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                 DATE
               </td>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
+              <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
             </tr>
             <tr>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
+              <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                 INVOICE #
               </td>
-              <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{doc.number}</td>
+              <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{doc.number}</td>
             </tr>
             {customer.customerId && (
               <tr>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
+                <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                   CUSTOMER ID
                 </td>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{customer.customerId}</td>
+                <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{customer.customerId}</td>
               </tr>
             )}
             {doc.dueDate && (
               <tr>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
+                <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", background: "#fafafa", fontWeight: 700, whiteSpace: "nowrap", textAlign: "center" }}>
                   DUE DATE
                 </td>
-                <td style={{ padding: "3px 8px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{formatDateDMY(doc.dueDate)}</td>
+                <td style={{ padding: "5px 8px 6px", border: "1px solid rgba(0,0,0,0.7)", textAlign: "center" }}>{formatDateDMY(doc.dueDate)}</td>
               </tr>
             )}
           </tbody>
