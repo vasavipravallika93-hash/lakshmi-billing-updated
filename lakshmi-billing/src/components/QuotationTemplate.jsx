@@ -42,6 +42,29 @@ const td = (extra) => ({
   ...extra,
 });
 
+// html2canvas does not reliably honor `vertical-align` on table cells — a
+// row whose height gets stretched by a neighboring cell (or by the overall
+// table layout) ends up rendering its shorter cells' text pinned to the
+// bottom instead of centered, even though `verticalAlign: "middle"` is set.
+// The fix is the standard "height:1px" table hack: giving the <td>/<th> an
+// explicit height of 1px does not actually shrink it (the row is still
+// sized by its tallest cell), but it lets a `height:100%` flex child inside
+// resolve against the *real* rendered row height and center within it —
+// and unlike `vertical-align`, flexbox alignment IS respected by
+// html2canvas. Use <Cell> instead of a bare <td>/<th> for any table cell
+// that needs true vertical centering.
+function Cell({ tag: Tag = "td", align = "center", extra, children }) {
+  const styleFn = Tag === "th" ? th : td;
+  const justify = align === "right" ? "flex-end" : align === "left" ? "flex-start" : "center";
+  return (
+    <Tag style={styleFn({ height: 1, ...extra })}>
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: justify }}>
+        {children}
+      </div>
+    </Tag>
+  );
+}
+
 function NumberedLines({ text }) {
   const lines = (text || "").split("\n").filter(Boolean);
   return (
@@ -109,16 +132,28 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
           <table style={{ fontSize: 10, borderCollapse: "collapse" }}>
             <tbody>
               <tr>
-                <td style={{ border: "none", padding: "2px 8px", fontWeight: 700, textAlign: "right" }}>DATE</td>
-                <td style={{ border: `1px solid ${BORDER}`, padding: "2px 8px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
+                <td style={{ border: "none", height: 1, padding: "2px 8px", fontWeight: 700 }}>
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>DATE</div>
+                </td>
+                <td style={{ border: `1px solid ${BORDER}`, height: 1, padding: "2px 8px" }}>
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>{formatDateDMY(doc.date)}</div>
+                </td>
               </tr>
               <tr>
-                <td style={{ border: "none", padding: "2px 8px", fontWeight: 700, textAlign: "right" }}>QUOTE #</td>
-                <td style={{ border: `1px solid ${BORDER}`, padding: "2px 8px", textAlign: "center" }}>{doc.number}</td>
+                <td style={{ border: "none", height: 1, padding: "2px 8px", fontWeight: 700 }}>
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>QUOTE #</div>
+                </td>
+                <td style={{ border: `1px solid ${BORDER}`, height: 1, padding: "2px 8px" }}>
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>{doc.number}</div>
+                </td>
               </tr>
               <tr>
-                <td style={{ border: "none", padding: "2px 8px", fontWeight: 700, textAlign: "right" }}>VALID UNTIL</td>
-                <td style={{ border: `1px solid ${BORDER}`, padding: "2px 8px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
+                <td style={{ border: "none", height: 1, padding: "2px 8px", fontWeight: 700 }}>
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>VALID UNTIL</div>
+                </td>
+                <td style={{ border: `1px solid ${BORDER}`, height: 1, padding: "2px 8px" }}>
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>{formatDateDMY(doc.validUntil)}</div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -179,33 +214,33 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
         <table style={{ width: "100%", fontSize: 9.5, borderCollapse: "collapse", marginTop: 5 }}>
           <thead>
             <tr style={{ background: ACCENT, color: "#fff" }}>
-              {variant !== "service_breakdown" && <th style={th({ width: 26 })}>S.No</th>}
-              <th style={th({ textAlign: "left" })}>DESCRIPTION</th>
-              {variant === "product" && <th style={th()}>Make</th>}
-              {variant !== "service_breakdown" && <th style={th()}>HSN</th>}
-              {(variant === "product" || variant === "service_terms") && <th style={th()}>UOM</th>}
-              <th style={th()}>{variant === "service_breakdown" ? "Qty" : "QTY"}</th>
-              {variant === "service_breakdown" && <th style={th()}>{doc.basisColumnLabel || "PER TR"}</th>}
-              <th style={th()}>{variant === "service_breakdown" ? "Rate" : "RATE"}</th>
-              <th style={th()}>GST</th>
-              <th style={th({ textAlign: "right" })}>AMOUNT</th>
+              {variant !== "service_breakdown" && <Cell tag="th" extra={{ width: 26 }}>S.No</Cell>}
+              <Cell tag="th" align="left">DESCRIPTION</Cell>
+              {variant === "product" && <Cell tag="th">Make</Cell>}
+              {variant !== "service_breakdown" && <Cell tag="th">HSN</Cell>}
+              {(variant === "product" || variant === "service_terms") && <Cell tag="th">UOM</Cell>}
+              <Cell tag="th">{variant === "service_breakdown" ? "Qty" : "QTY"}</Cell>
+              {variant === "service_breakdown" && <Cell tag="th">{doc.basisColumnLabel || "PER TR"}</Cell>}
+              <Cell tag="th">{variant === "service_breakdown" ? "Rate" : "RATE"}</Cell>
+              <Cell tag="th">GST</Cell>
+              <Cell tag="th" align="right">AMOUNT</Cell>
             </tr>
           </thead>
           <tbody>
             {items.map((it, i) => (
               <tr key={i}>
-                {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{i + 1}</td>}
-                <td style={td()}>{it.description}</td>
-                {variant === "product" && <td style={td({ textAlign: "center" })}>{it.make}</td>}
-                {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.hsn}</td>}
-                {(variant === "product" || variant === "service_terms") && <td style={td({ textAlign: "center" })}>{it.unit}</td>}
-                <td style={td({ textAlign: "center" })}>{it.qty}</td>
-                {variant === "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.basis}</td>}
-                <td style={td({ textAlign: "center" })}>{Number(it.rate).toFixed(2)}</td>
-                <td style={td({ textAlign: "center" })}>{it.gstRate ?? gstRate}%</td>
-                <td style={td({ textAlign: "right", whiteSpace: "nowrap" })}>
+                {variant !== "service_breakdown" && <Cell>{i + 1}</Cell>}
+                <Cell align="left">{it.description}</Cell>
+                {variant === "product" && <Cell>{it.make}</Cell>}
+                {variant !== "service_breakdown" && <Cell>{it.hsn}</Cell>}
+                {(variant === "product" || variant === "service_terms") && <Cell>{it.unit}</Cell>}
+                <Cell>{it.qty}</Cell>
+                {variant === "service_breakdown" && <Cell>{it.basis}</Cell>}
+                <Cell>{Number(it.rate).toFixed(2)}</Cell>
+                <Cell>{it.gstRate ?? gstRate}%</Cell>
+                <Cell align="right" extra={{ whiteSpace: "nowrap" }}>
                   {formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? gstRate) / 100))}
-                </td>
+                </Cell>
               </tr>
             ))}
             {summaryRows.map(([label, value], i) => (
@@ -291,8 +326,8 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
                       ["Offer validity", doc.terms?.offerValidity],
                     ].map(([label, value]) => (
                       <tr key={label}>
-                        <td style={td({ fontWeight: 700, width: "42%", textAlign: "center" })}>{label}</td>
-                        <td style={td({ textAlign: "center" })}>{value}</td>
+                        <Cell extra={{ fontWeight: 700, width: "42%" }}>{label}</Cell>
+                        <Cell>{value}</Cell>
                       </tr>
                     ))}
                   </tbody>
