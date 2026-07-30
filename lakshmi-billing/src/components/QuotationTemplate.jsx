@@ -343,9 +343,17 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
           </div>
 
           <div style={{ width: "45%", flexShrink: 0 }}>
-            {/* amount-in-words sits to the LEFT of the total box, same row */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 8 }}>
-              <div style={{ fontSize: 9, lineHeight: 1.25, flex: 1 }}>
+            {/* amount-in-words box sits flush against the total box — shared border, no gap */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 0 }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  lineHeight: 1.25,
+                  flex: 1,
+                  border: `1px solid ${BORDER}`,
+                  padding: "6px 8px",
+                }}
+              >
                 <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)-INR-</span>
                 <br />
                 {doc.amountInWords}
@@ -357,6 +365,7 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
                   alignItems: "center",
                   gap: 16,
                   border: `1px solid ${BORDER}`,
+                  borderLeft: "none",
                   background: TOTAL_BG,
                   padding: "7px 12px",
                   fontWeight: 700,
