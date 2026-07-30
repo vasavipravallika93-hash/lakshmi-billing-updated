@@ -38,7 +38,7 @@ const td = (extra) => ({
   border: `1px solid ${BORDER}`,
   padding: "3px 6px",
   lineHeight: 1.2,
-  verticalAlign: "top",
+  verticalAlign: "middle",
   ...extra,
 });
 
@@ -109,16 +109,16 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
           <table style={{ fontSize: 10, borderCollapse: "collapse" }}>
             <tbody>
               <tr>
-                <td style={{ border: "none", padding: "5px 8px 6px", fontWeight: 700, textAlign: "right" }}>DATE</td>
-                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
+                <td style={{ border: "none", padding: "2px 8px", fontWeight: 700, textAlign: "right" }}>DATE</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "2px 8px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
               </tr>
               <tr>
-                <td style={{ border: "none", padding: "5px 8px 6px", fontWeight: 700, textAlign: "right" }}>QUOTE #</td>
-                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{doc.number}</td>
+                <td style={{ border: "none", padding: "2px 8px", fontWeight: 700, textAlign: "right" }}>QUOTE #</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "2px 8px", textAlign: "center" }}>{doc.number}</td>
               </tr>
               <tr>
-                <td style={{ border: "none", padding: "5px 8px 6px", fontWeight: 700, textAlign: "right" }}>VALID UNTIL</td>
-                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
+                <td style={{ border: "none", padding: "2px 8px", fontWeight: 700, textAlign: "right" }}>VALID UNTIL</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "2px 8px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
               </tr>
             </tbody>
           </table>
@@ -341,8 +341,20 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
 
           <div style={{ width: "45%", flexShrink: 0 }}>
             {/* amount-in-words sits to the LEFT of the total box, same row */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 8 }}>
-              <div style={{ fontSize: 9, lineHeight: 1.25, flex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 0 }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  lineHeight: 1.25,
+                  flex: 1,
+                  border: `1px solid ${BORDER}`,
+                  borderRight: "none",
+                  padding: "6px 8px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
                 <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)-INR-</span>
                 <br />
                 {doc.amountInWords}
