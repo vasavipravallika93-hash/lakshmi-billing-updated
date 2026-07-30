@@ -66,10 +66,10 @@ function GridCell({ align = "center", last, children, style }) {
     <div
       style={{
         borderRight: last ? "none" : `1px solid ${BORDER}`,
-        padding: "3px 6px",
+        padding: "2px 6px",
         fontSize: 9.5,
         lineHeight: 1.2,
-        minHeight: 18,
+        minHeight: 15,
         display: "flex",
         alignItems: "center",
         justifyContent: justify,
@@ -321,7 +321,14 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
               ))}
 
               {summaryRows.map(([label, value], i) => (
-                <GridRow cols={cols} key={label} style={i === 0 ? { borderTop: `1px solid ${BORDER}` } : undefined}>
+                <div
+                  key={label}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: cols,
+                    borderTop: i === 0 ? `1px solid ${BORDER}` : "none",
+                  }}
+                >
                   <div
                     style={{
                       gridColumn: `1 / ${columns.length}`,
@@ -349,7 +356,7 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
                   >
                     {formatINR(value)}
                   </div>
-                </GridRow>
+                </div>
               ))}
             </div>
           );
