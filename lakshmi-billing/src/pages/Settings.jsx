@@ -152,6 +152,9 @@ export default function Settings() {
           <Field label="Address" value={form.address} onChange={(v) => update("address", v)} full textarea />
           <Field label="Phone" value={form.phone} onChange={(v) => update("phone", v)} />
           <Field label="Email" value={form.email} onChange={(v) => update("email", v)} />
+          <Field label="Website (shown as plain text, not a link)" value={form.website} onChange={(v) => update("website", v)} />
+          <Field label="ISO Number (shown centered at the top of quotations)" value={form.isoNumber} onChange={(v) => update("isoNumber", v)} />
+          <Field label="ISO Description (small line under the ISO number)" value={form.isoDescription} onChange={(v) => update("isoDescription", v)} full />
           <Field label="GST Number" value={form.gst} onChange={(v) => update("gst", v)} />
           <Field label="PAN" value={form.pan} onChange={(v) => update("pan", v)} />
           <Field label="Bank Name" value={form.bankName} onChange={(v) => update("bankName", v)} />

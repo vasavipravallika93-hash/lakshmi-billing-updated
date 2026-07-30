@@ -3,36 +3,58 @@ import { formatINR, formatDateDMY } from "../lib/storage";
 import defaultLogo from "../assets/logo.png";
 import defaultStamp from "../assets/stamp.png";
 
-// Three compact quotation layouts, matching the 3 real Lakshmi Engineering
-// formats (dark-green #14733d frame/borders, light-green header bars, gold
-// #ffc000 total box). Sections are kept tight/small so a typical quotation
-// (1-4 line items) fits on a single A4 page; a long item list is free to
-// spill onto a 2nd page (see lib/pdf.js — page breaks always land between
-// sections, never through the middle of a box).
+// Three quotation layouts, matching the 3 real Lakshmi Engineering formats.
+// Single black outer frame (no separate colored border), solid green
+// (#1ba64b — same green used on invoices/proformas) for header bars/fills,
+// gold (#ffc000) total box. Sections are kept tight so 10-15 line items
+// still comfortably fit a single A4 page.
 //
 // IMPORTANT: every structural rule here (borders, flex layout, padding) is
-// written as an inline `style` object rather than a Tailwind class. Tailwind
-// utility classes depend on the build's generated stylesheet being present;
-// inline styles always render correctly, in the browser and in html2canvas,
-// regardless of build/cache state. Do not convert these back to className-only.
+// written as an inline `style` object rather than a Tailwind class — inline
+// styles always render correctly in html2canvas regardless of build/cache
+// state. Do not convert these back to className-only.
+//
+// The Sub Total / CGST / SGST / GST rows are rendered as extra <tr>s
+// *inside the same items table* (not a separate floating box) so they are
+// guaranteed to line up under the RATE/GST/AMOUNT columns — table layout
+// does this automatically, a separate absolutely-positioned box can't.
+//
+// Numbered Terms/Notes are rendered as manually-numbered "1. text" lines
+// rather than a real <ol>/<li> — html2canvas does not reliably render
+// list-marker counters, which is why numbers were silently vanishing from
+// the exported PDF even though they showed in the live browser preview.
 
-const BORDER = "#14733d";
-const HEADER_BG = "#bfe08a"; // light green
+const BORDER = "#000";
+const ACCENT = "#1ba64b"; // same green as invoice/proforma
 const TOTAL_BG = "#ffc000";
 
 const th = (extra) => ({
   border: `1px solid ${BORDER}`,
-  padding: "5px 8px",
-  lineHeight: 1.25,
+  padding: "4px 7px",
+  lineHeight: 1.2,
   ...extra,
 });
 const td = (extra) => ({
   border: `1px solid ${BORDER}`,
-  padding: "5px 8px",
-  lineHeight: 1.3,
+  padding: "4px 7px",
+  lineHeight: 1.25,
   verticalAlign: "top",
   ...extra,
 });
+
+function NumberedLines({ text }) {
+  const lines = (text || "").split("\n").filter(Boolean);
+  return (
+    <div>
+      {lines.map((line, i) => (
+        <div key={i} style={{ display: "flex", marginBottom: 2 }}>
+          <span style={{ width: 16, flexShrink: 0 }}>{i + 1}.</span>
+          <span>{line.replace(/^\d+\.\s*/, "")}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
   const company = doc.company || {};
@@ -40,6 +62,17 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
   const variant = doc.variant || "product";
   const items = doc.items || [];
   const gstRate = doc.gstRate || 18;
+
+  // Column count per variant — used to colSpan the Sub Total/CGST/SGST/GST
+  // rows so they land exactly under the RATE/GST/AMOUNT columns.
+  const colCount =
+    variant === "product" ? 9 : variant === "service_terms" ? 8 : 6; // service_breakdown
+
+  const summaryRows = [];
+  if (doc.showSubtotal) summaryRows.push(["Sub Total:", doc.subtotal]);
+  summaryRows.push([`CGST ${gstRate / 2}%:`, doc.cgst]);
+  summaryRows.push([`SGST ${gstRate / 2}%:`, doc.sgst]);
+  summaryRows.push([`GST ${gstRate}%:`, doc.gst]);
 
   return (
     <div
@@ -53,430 +86,332 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
     >
       <div
         style={{
-          border: "2px solid #000",
-          boxSizing: "border-box",
-          padding: 12,
-        }}
-      >
-      <div
-        style={{
           color: "#0f1a14",
           boxSizing: "border-box",
           fontFamily: "Inter, system-ui, sans-serif",
           border: `2px solid ${BORDER}`,
-          borderRadius: 5,
-          padding: "14px 22px 16px",
+          padding: "12px 20px 14px",
         }}
       >
-      {/* header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 46, objectFit: "contain" }} />
-        <table style={{ fontSize: 11, borderCollapse: "collapse" }}>
-          <tbody>
-            <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>DATE</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
-            </tr>
-            <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>QUOTE #</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", textAlign: "center" }}>{doc.number}</td>
-            </tr>
-            <tr>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>VALID UNTIL</td>
-              <td style={{ border: "1px solid rgba(0,0,0,0.7)", padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        {/* ISO number — configurable in Settings */}
+        {company.isoNumber && (
+          <div style={{ textAlign: "center", marginBottom: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 10.5 }}>ISO {company.isoNumber}</div>
+            {company.isoDescription && (
+              <div style={{ fontSize: 8.5, color: "#444", marginTop: 1 }}>{company.isoDescription}</div>
+            )}
+          </div>
+        )}
 
-      {/* company block */}
-      <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.4, maxWidth: 340 }}>
-        <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-        <div>{company.address}</div>
-        <div>Phone No- {company.phone}</div>
-        <div>Mail- {company.email}</div>
-        <div>GST No- {company.gst}</div>
-      </div>
+        {/* header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 58, objectFit: "contain" }} />
+          <table style={{ fontSize: 10.5, borderCollapse: "collapse" }}>
+            <tbody>
+              <tr>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>DATE</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
+              </tr>
+              <tr>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>QUOTE #</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{doc.number}</td>
+              </tr>
+              <tr>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", background: "#fafafa", fontWeight: 700, textAlign: "center" }}>VALID UNTIL</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      {/* customer block */}
-      <div
-        style={{
-          display: "inline-block",
-          fontSize: 11,
-          fontWeight: 700,
-          textAlign: "center",
-          padding: "3px 20px",
-          lineHeight: 1.25,
-          marginTop: 8,
-          border: `1px solid ${BORDER}`,
-          background: HEADER_BG,
-        }}
-      >
-        CUSTOMER
-      </div>
-      <div style={{ fontSize: 11, lineHeight: 1.35, paddingTop: 4 }}>
-        <div style={{ fontWeight: 700 }}>{customer.name}</div>
-        <div style={{ whiteSpace: "pre-line" }}>{customer.address}</div>
-        {customer.phone && <div>Ph: {customer.phone}</div>}
-        {customer.gst && <div>GST No- {customer.gst}</div>}
-      </div>
+        {/* company block */}
+        <div style={{ marginTop: 6, fontSize: 10.5, lineHeight: 1.35, maxWidth: 340 }}>
+          <div style={{ fontWeight: 700, fontSize: 12 }}>{company.companyName}</div>
+          <div>{company.address}</div>
+          <div>Phone No- {company.phone}</div>
+          <div>Mail- {company.email}</div>
+          {company.website && <div>Website- {company.website}</div>}
+          <div>GST No- {company.gst}</div>
+        </div>
 
-      {/* subject line — shown for every quotation, underlined only on the single-item service format */}
-      {doc.heading && (
+        {/* customer block */}
         <div
           style={{
-            textAlign: "center",
+            display: "inline-block",
+            fontSize: 10.5,
             fontWeight: 700,
-            fontSize: 12,
-            marginTop: 8,
-            marginBottom: 2,
-            lineHeight: 1.25,
-            textDecoration: variant === "service_breakdown" ? "underline" : "none",
+            color: "#fff",
+            textAlign: "center",
+            padding: "3px 20px",
+            lineHeight: 1.2,
+            marginTop: 6,
+            border: `1px solid ${BORDER}`,
+            background: ACCENT,
           }}
         >
-          {doc.heading}
+          CUSTOMER
         </div>
-      )}
-
-      {/* items table */}
-      <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 8 }}>
-        <thead>
-          <tr style={{ background: HEADER_BG }}>
-            {variant !== "service_breakdown" && <th style={th({ width: 28 })}>S.No</th>}
-            <th style={th({ textAlign: "left" })}>DESCRIPTION</th>
-            {variant === "product" && <th style={th()}>Make</th>}
-            {variant !== "service_breakdown" && <th style={th()}>HSN</th>}
-            {(variant === "product" || variant === "service_terms") && <th style={th()}>UOM</th>}
-            <th style={th()}>{variant === "service_breakdown" ? "Qty" : "QTY"}</th>
-            {variant === "service_breakdown" && <th style={th()}>{doc.basisColumnLabel || "PER TR"}</th>}
-            <th style={th()}>{variant === "service_breakdown" ? "Rate" : "RATE"}</th>
-            <th style={th()}>GST</th>
-            <th style={th({ textAlign: "right" })}>AMOUNT</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((it, i) => (
-            <tr key={i}>
-              {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{i + 1}</td>}
-              <td style={td()}>{it.description}</td>
-              {variant === "product" && <td style={td({ textAlign: "center" })}>{it.make}</td>}
-              {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.hsn}</td>}
-              {(variant === "product" || variant === "service_terms") && <td style={td({ textAlign: "center" })}>{it.unit}</td>}
-              <td style={td({ textAlign: "center" })}>{it.qty}</td>
-              {variant === "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.basis}</td>}
-              <td style={td({ textAlign: "center" })}>{Number(it.rate).toFixed(2)}</td>
-              <td style={td({ textAlign: "center" })}>{it.gstRate ?? gstRate}%</td>
-              <td style={td({ textAlign: "right", whiteSpace: "nowrap" })}>
-                {formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? gstRate) / 100))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* below-table area: terms/work-breakup on the left, tax breakdown + total on the right */}
-      {variant === "service_breakdown" && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 18, marginTop: 10, alignItems: "stretch" }}>
-          <div style={{ width: "54%" }}>
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 11,
-                padding: "4px 8px",
-                border: `1px solid ${BORDER}`,
-                borderBottom: "none",
-                background: HEADER_BG,
-              }}
-            >
-              Work break Up Details:
-            </div>
-            <div
-              style={{
-                fontSize: 10.5,
-                lineHeight: 1.35,
-                padding: "6px 8px",
-                border: `1px solid ${BORDER}`,
-                height: "100%",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {doc.terms?.workBreakup}
-            </div>
-          </div>
-          <div style={{ width: "42%", flexShrink: 0 }}>
-            <div style={{ fontSize: 11, lineHeight: 1.4 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>CGST {gstRate / 2}%:</span>
-                <span>{formatINR(doc.cgst)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>SGST {gstRate / 2}%:</span>
-                <span>{formatINR(doc.sgst)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>GST {gstRate}%:</span>
-                <span>{formatINR(doc.gst)}</span>
-              </div>
-            </div>
-            <div style={{ fontSize: 10.5, lineHeight: 1.3, marginTop: 6 }}>
-              <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)INR-</span>
-              <br />
-              {doc.amountInWords}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: `1px solid ${BORDER}`,
-                background: TOTAL_BG,
-                padding: "8px 12px",
-                fontWeight: 700,
-                fontSize: 14,
-                marginTop: 6,
-              }}
-            >
-              <span>TOTAL</span>
-              <span>{formatINR(doc.total)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
-              <div style={{ textAlign: "center", width: 200 }}>
-                <img
-                  src={company.stampDataUrl || defaultStamp}
-                  alt="stamp and signature"
-                  style={{ height: 66, objectFit: "contain", margin: "0 auto 4px" }}
-                />
-                <div style={{ fontSize: 10.5, fontWeight: 700, borderTop: "1px solid rgba(0,0,0,0.6)", paddingTop: 4 }}>
-                  Authorised Signatory
-                </div>
-              </div>
-            </div>
-          </div>
+        <div style={{ fontSize: 10.5, lineHeight: 1.3, paddingTop: 4 }}>
+          <div style={{ fontWeight: 700 }}>{customer.name}</div>
+          <div>{customer.address}</div>
+          {customer.phone && <div>Ph: {customer.phone}</div>}
+          {customer.gst && <div>GST No- {customer.gst}</div>}
         </div>
-      )}
 
-      {(variant === "product" || variant === "service_terms") && (
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
-          <div style={{ width: 240, fontSize: 11, lineHeight: 1.4 }}>
-            {doc.showSubtotal && (
-              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700 }}>
-                <span>Sub Total:</span>
-                <span>{formatINR(doc.subtotal)}</span>
-              </div>
-            )}
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>CGST {gstRate / 2} %:</span>
-              <span>{formatINR(doc.cgst)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>SGST {gstRate / 2} %:</span>
-              <span>{formatINR(doc.sgst)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>GST {gstRate} %:</span>
-              <span>{formatINR(doc.gst)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {variant === "product" && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 18, marginTop: 10, alignItems: "flex-start" }}>
-          <div style={{ width: "54%" }}>
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 11,
-                textAlign: "center",
-                padding: "4px 8px",
-                border: `1px solid ${BORDER}`,
-                background: HEADER_BG,
-              }}
-            >
-              TERMS AND CONDITION
-            </div>
-            <table style={{ width: "100%", fontSize: 10.5, borderCollapse: "collapse" }}>
-              <tbody>
-                {[
-                  ["Payment Terms", doc.terms?.paymentTerms],
-                  ["Delivery Time", doc.terms?.deliveryTime],
-                  ["Taxes", doc.terms?.taxes],
-                  ["Packing and Forwardings", doc.terms?.packingForwarding],
-                  ["Freight/Transportation", doc.terms?.freightTransportation],
-                  ["Offer validity", doc.terms?.offerValidity],
-                ].map(([label, value]) => (
-                  <tr key={label}>
-                    <td style={td({ fontWeight: 700, width: "42%" })}>{label}</td>
-                    <td style={td()}>{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 11,
-                padding: "4px 8px",
-                border: `1px solid ${BORDER}`,
-                borderTop: "none",
-                background: HEADER_BG,
-              }}
-            >
-              NOTE:
-            </div>
-            <div
-              style={{
-                fontSize: 10,
-                lineHeight: 1.35,
-                padding: "6px 8px",
-                border: `1px solid ${BORDER}`,
-                borderTop: "none",
-              }}
-            >
-              <ol style={{ paddingLeft: 16, margin: 0 }}>
-                {(doc.terms?.notes || "").split("\n").filter(Boolean).map((n, i) => (
-                  <li key={i} style={{ marginBottom: 2 }}>
-                    {n.replace(/^\d+\.\s*/, "")}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-          <div style={{ width: "42%", flexShrink: 0 }}>
-            <div style={{ fontSize: 10.5, lineHeight: 1.3 }}>
-              <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)-INR-</span>
-              <br />
-              {doc.amountInWords}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: `1px solid ${BORDER}`,
-                background: TOTAL_BG,
-                padding: "8px 12px",
-                fontWeight: 700,
-                fontSize: 14,
-                marginTop: 6,
-              }}
-            >
-              <span>TOTAL</span>
-              <span>{formatINR(doc.total)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
-              <div style={{ textAlign: "center", width: 200 }}>
-                <img
-                  src={company.stampDataUrl || defaultStamp}
-                  alt="stamp and signature"
-                  style={{ height: 48, objectFit: "contain", margin: "0 auto 4px" }}
-                />
-                <div style={{ fontSize: 10.5, fontWeight: 700, borderTop: "1px solid rgba(0,0,0,0.6)", paddingTop: 4 }}>
-                  Authorised Signatory
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {variant === "service_terms" && (
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 18, marginTop: 10 }}>
-          <div style={{ width: "52%" }}>
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 11,
-                textAlign: "center",
-                padding: "4px 8px",
-                border: `1px solid ${BORDER}`,
-                borderBottom: "none",
-                background: HEADER_BG,
-              }}
-            >
-              TERMS AND CONDITION
-            </div>
-            <div style={{ fontSize: 10.5, lineHeight: 1.35, padding: "6px 8px", border: `1px solid ${BORDER}` }}>
-              <ol style={{ paddingLeft: 16, margin: 0 }}>
-                {(doc.terms?.list || "").split("\n").filter(Boolean).map((n, i) => (
-                  <li key={i} style={{ marginBottom: 2 }}>
-                    {n.replace(/^\d+\.\s*/, "")}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-          <div style={{ width: "44%", flexShrink: 0 }}>
-            <div style={{ fontSize: 10.5, lineHeight: 1.3, marginTop: 6 }}>
-              <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)INR-</span>
-              <br />
-              {doc.amountInWords}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: `1px solid ${BORDER}`,
-                background: TOTAL_BG,
-                padding: "8px 12px",
-                fontWeight: 700,
-                fontSize: 14,
-                marginTop: 6,
-              }}
-            >
-              <span>TOTAL</span>
-              <span>{formatINR(doc.total)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
-              <div style={{ textAlign: "center", width: 200 }}>
-                <img
-                  src={company.stampDataUrl || defaultStamp}
-                  alt="stamp and signature"
-                  style={{ height: 66, objectFit: "contain", margin: "0 auto 4px" }}
-                />
-                <div style={{ fontSize: 10.5, fontWeight: 700, borderTop: "1px solid rgba(0,0,0,0.6)", paddingTop: 4 }}>
-                  Authorised Signatory
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* bank details */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-        <div style={{ display: "flex", border: `1px solid ${BORDER}`, width: 360 }}>
+        {/* subject line — always underlined, shown for every quotation */}
+        {doc.heading && (
           <div
             style={{
-              fontWeight: 700,
-              fontSize: 12,
-              lineHeight: 1.2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               textAlign: "center",
-              padding: "6px 8px",
-              width: 90,
-              flexShrink: 0,
-              borderRight: `1px solid ${BORDER}`,
-              background: HEADER_BG,
+              fontWeight: 700,
+              fontSize: 11.5,
+              marginTop: 6,
+              marginBottom: 2,
+              lineHeight: 1.2,
+              textDecoration: "underline",
             }}
           >
-            BANK
-            <br />
-            DETAILS
+            {doc.heading}
           </div>
-          <div style={{ fontSize: 10, lineHeight: 1.35, padding: "6px 8px" }}>
-            BANK NAME: {company.bankName}
-            <br />
-            A/C NO: {company.accountNo}
-            <br />
-            BRANCH &amp; IFS Code: {company.branchIfsc}
+        )}
+
+        {/* items table (Sub Total/CGST/SGST/GST are extra rows in this same table, below) */}
+        <table style={{ width: "100%", fontSize: 10, borderCollapse: "collapse", marginTop: 6 }}>
+          <thead>
+            <tr style={{ background: ACCENT, color: "#fff" }}>
+              {variant !== "service_breakdown" && <th style={th({ width: 26 })}>S.No</th>}
+              <th style={th({ textAlign: "left" })}>DESCRIPTION</th>
+              {variant === "product" && <th style={th()}>Make</th>}
+              {variant !== "service_breakdown" && <th style={th()}>HSN</th>}
+              {(variant === "product" || variant === "service_terms") && <th style={th()}>UOM</th>}
+              <th style={th()}>{variant === "service_breakdown" ? "Qty" : "QTY"}</th>
+              {variant === "service_breakdown" && <th style={th()}>{doc.basisColumnLabel || "PER TR"}</th>}
+              <th style={th()}>{variant === "service_breakdown" ? "Rate" : "RATE"}</th>
+              <th style={th()}>GST</th>
+              <th style={th({ textAlign: "right" })}>AMOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((it, i) => (
+              <tr key={i}>
+                {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{i + 1}</td>}
+                <td style={td()}>{it.description}</td>
+                {variant === "product" && <td style={td({ textAlign: "center" })}>{it.make}</td>}
+                {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.hsn}</td>}
+                {(variant === "product" || variant === "service_terms") && <td style={td({ textAlign: "center" })}>{it.unit}</td>}
+                <td style={td({ textAlign: "center" })}>{it.qty}</td>
+                {variant === "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.basis}</td>}
+                <td style={td({ textAlign: "center" })}>{Number(it.rate).toFixed(2)}</td>
+                <td style={td({ textAlign: "center" })}>{it.gstRate ?? gstRate}%</td>
+                <td style={td({ textAlign: "right", whiteSpace: "nowrap" })}>
+                  {formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? gstRate) / 100))}
+                </td>
+              </tr>
+            ))}
+            {summaryRows.map(([label, value], i) => (
+              <tr key={label}>
+                <td
+                  colSpan={colCount - 1}
+                  style={{
+                    border: "none",
+                    borderTop: i === 0 ? `1px solid ${BORDER}` : "none",
+                    padding: "3px 7px",
+                    textAlign: "right",
+                    fontWeight: label.startsWith("Sub") ? 700 : 500,
+                    fontSize: 10,
+                  }}
+                >
+                  {label}
+                </td>
+                <td
+                  style={{
+                    border: "none",
+                    borderTop: i === 0 ? `1px solid ${BORDER}` : "none",
+                    padding: "3px 7px",
+                    textAlign: "right",
+                    whiteSpace: "nowrap",
+                    fontWeight: label.startsWith("Sub") ? 700 : 500,
+                    fontSize: 10,
+                  }}
+                >
+                  {formatINR(value)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* below-table: terms/work-breakup on the left, amount-in-words + total + stamp + bank on the right */}
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginTop: 10, alignItems: "flex-start" }}>
+          <div style={{ width: "53%" }}>
+            {variant === "service_breakdown" && (
+              <>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 10.5,
+                    color: "#fff",
+                    padding: "4px 8px",
+                    border: `1px solid ${BORDER}`,
+                    borderBottom: "none",
+                    background: ACCENT,
+                  }}
+                >
+                  Work break Up Details:
+                </div>
+                <div style={{ fontSize: 10, lineHeight: 1.3, padding: "6px 8px", border: `1px solid ${BORDER}`, whiteSpace: "pre-line" }}>
+                  {doc.terms?.workBreakup}
+                </div>
+              </>
+            )}
+
+            {variant === "product" && (
+              <>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 10.5,
+                    color: "#fff",
+                    textAlign: "center",
+                    padding: "4px 8px",
+                    border: `1px solid ${BORDER}`,
+                    background: ACCENT,
+                  }}
+                >
+                  TERMS AND CONDITION
+                </div>
+                <table style={{ width: "100%", fontSize: 10, borderCollapse: "collapse" }}>
+                  <tbody>
+                    {[
+                      ["Payment Terms", doc.terms?.paymentTerms],
+                      ["Delivery Time", doc.terms?.deliveryTime],
+                      ["Taxes", doc.terms?.taxes],
+                      ["Packing and Forwardings", doc.terms?.packingForwarding],
+                      ["Freight/Transportation", doc.terms?.freightTransportation],
+                      ["Offer validity", doc.terms?.offerValidity],
+                    ].map(([label, value]) => (
+                      <tr key={label}>
+                        <td style={td({ fontWeight: 700, width: "42%" })}>{label}</td>
+                        <td style={td()}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 10.5,
+                    color: "#fff",
+                    padding: "4px 8px",
+                    border: `1px solid ${BORDER}`,
+                    borderTop: "none",
+                    background: ACCENT,
+                  }}
+                >
+                  NOTE:
+                </div>
+                <div style={{ fontSize: 9.5, lineHeight: 1.3, padding: "6px 8px", border: `1px solid ${BORDER}`, borderTop: "none" }}>
+                  <NumberedLines text={doc.terms?.notes} />
+                </div>
+              </>
+            )}
+
+            {variant === "service_terms" && (
+              <>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 10.5,
+                    color: "#fff",
+                    textAlign: "center",
+                    padding: "4px 8px",
+                    border: `1px solid ${BORDER}`,
+                    borderBottom: "none",
+                    background: ACCENT,
+                  }}
+                >
+                  TERMS AND CONDITION
+                </div>
+                <div style={{ fontSize: 10, lineHeight: 1.3, padding: "6px 8px", border: `1px solid ${BORDER}` }}>
+                  <NumberedLines text={doc.terms?.list} />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div style={{ width: "45%", flexShrink: 0 }}>
+            {/* amount-in-words sits to the LEFT of the total box, same row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 8 }}>
+              <div style={{ fontSize: 9.5, lineHeight: 1.3, flex: 1 }}>
+                <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)-INR-</span>
+                <br />
+                {doc.amountInWords}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  border: `1px solid ${BORDER}`,
+                  background: TOTAL_BG,
+                  padding: "6px 10px",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  minWidth: 130,
+                  textAlign: "center",
+                }}
+              >
+                <span>TOTAL</span>
+                <span>{formatINR(doc.total)}</span>
+              </div>
+            </div>
+
+            {/* stamp + signature, directly under the total */}
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+              <div style={{ textAlign: "center", width: 190 }}>
+                <img
+                  src={company.stampDataUrl || defaultStamp}
+                  alt="stamp and signature"
+                  style={{ height: 62, objectFit: "contain", margin: "0 auto 4px" }}
+                />
+                <div style={{ fontSize: 10, fontWeight: 700, borderTop: `1px solid ${BORDER}`, paddingTop: 4 }}>Authorised Signatory</div>
+              </div>
+            </div>
+
+            {/* bank details — directly under stamp/signature */}
+            <div style={{ display: "flex", border: `1px solid ${BORDER}`, marginTop: 10 }}>
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 11,
+                  color: "#fff",
+                  lineHeight: 1.15,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  padding: "6px 6px",
+                  width: 78,
+                  flexShrink: 0,
+                  borderRight: `1px solid ${BORDER}`,
+                  background: ACCENT,
+                }}
+              >
+                BANK
+                <br />
+                DETAILS
+              </div>
+              <div style={{ fontSize: 9, lineHeight: 1.3, padding: "6px 8px" }}>
+                BANK NAME: {company.bankName}
+                <br />
+                A/C NO: {company.accountNo}
+                <br />
+                BRANCH &amp; IFS Code: {company.branchIfsc}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      </div>
       </div>
     </div>
   );

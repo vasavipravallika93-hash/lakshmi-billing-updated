@@ -37,7 +37,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           color: "#0f1a14",
           boxSizing: "border-box",
           fontFamily: "Inter, system-ui, sans-serif",
-          border: `2px solid ${GREEN}`,
+          border: "2px solid #000",
           borderRadius: 6,
           padding: "14px 22px 0",
         }}
@@ -79,6 +79,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           <div>{company.address}</div>
           <div>Phone No- {company.phone}</div>
           <div>Mail- {company.email}</div>
+          {company.website && <div>Website- {company.website}</div>}
           <div>GST No- {company.gst}</div>
         </div>
 
@@ -235,7 +236,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         color: "#0f1a14",
         boxSizing: "border-box",
         fontFamily: "Inter, system-ui, sans-serif",
-        border: `2px solid ${GREEN}`,
+        border: "2px solid #000",
         borderRadius: 6,
         padding: "14px 22px 0",
       }}
@@ -252,6 +253,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
           <div>{company.address}</div>
           <div>Phone No- {company.phone}</div>
           <div>Mail- {company.email}</div>
+          {company.website && <div>Website- {company.website}</div>}
           <div>GST No- {company.gst}</div>
         </div>
 
