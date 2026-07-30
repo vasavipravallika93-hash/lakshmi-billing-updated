@@ -28,59 +28,20 @@ const BORDER = "#000";
 const ACCENT = "#1ba64b"; // same green as invoice/proforma
 const TOTAL_BG = "#ffc000";
 
-// IMPORTANT: the items table, the terms table, and the date/quote/valid-until
-// box are built entirely from <div>s with CSS Grid/Flexbox — NOT a real
-// <table>/<td>. html2canvas does not reliably center content inside native
-// table cells (neither `vertical-align` nor a `height:100%` flex child
-// inside a <td> renders correctly), which is why text kept rendering pinned
-// to the bottom of its cell no matter which CSS was tried on the <td>.
-// Flexbox alignment on plain <div>s (as used in the Bank Details / Total /
-// Amount-in-words boxes below) IS rendered correctly by html2canvas, so
-// every grid "row" here is a <div style={{display:"grid"}}> and every
-// "cell" is a <div style={{display:"flex", alignItems:"center"}}> — never
-// a <td>. Do not convert these back to a real <table>.
-const COL_WIDTH = {
-  sno: "26px",
-  description: "2fr",
-  make: "0.8fr",
-  hsn: "0.9fr",
-  uom: "0.6fr",
-  qty: "0.5fr",
-  basis: "0.8fr",
-  rate: "0.8fr",
-  gst: "0.5fr",
-  amount: "1fr",
-};
-
-function GridRow({ cols, children, style }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: cols, borderBottom: `1px solid ${BORDER}`, ...style }}>
-      {children}
-    </div>
-  );
-}
-
-function GridCell({ align = "center", last, children, style }) {
-  const justify = align === "right" ? "flex-end" : align === "left" ? "flex-start" : "center";
-  return (
-    <div
-      style={{
-        borderRight: last ? "none" : `1px solid ${BORDER}`,
-        padding: "2px 6px",
-        fontSize: 9.5,
-        lineHeight: 1.2,
-        minHeight: 15,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: justify,
-        overflow: "hidden",
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+const th = (extra) => ({
+  border: `1px solid ${BORDER}`,
+  padding: "5px 7px",
+  lineHeight: 1.25,
+  verticalAlign: "middle",
+  ...extra,
+});
+const td = (extra) => ({
+  border: `1px solid ${BORDER}`,
+  padding: "5px 7px",
+  lineHeight: 1.3,
+  verticalAlign: "middle",
+  ...extra,
+});
 
 function NumberedLines({ text }) {
   const lines = (text || "").split("\n").filter(Boolean);
@@ -102,6 +63,11 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
   const variant = doc.variant || "product";
   const items = doc.items || [];
   const gstRate = doc.gstRate || 18;
+
+  // Column count per variant — used to colSpan the Sub Total/CGST/SGST/GST
+  // rows so they land exactly under the RATE/GST/AMOUNT columns.
+  const colCount =
+    variant === "product" ? 9 : variant === "service_terms" ? 8 : 6; // service_breakdown
 
   const summaryRows = [];
   if (doc.showSubtotal) summaryRows.push(["Sub Total:", doc.subtotal]);
@@ -141,33 +107,22 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
         {/* header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 70, objectFit: "contain" }} />
-          <div style={{ display: "flex", fontSize: 10 }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {["DATE", "QUOTE #", "VALID UNTIL"].map((label) => (
-                <div key={label} style={{ height: 22, display: "flex", alignItems: "center", justifyContent: "flex-end", fontWeight: 700, padding: "0 8px" }}>
-                  {label}
-                </div>
-              ))}
-            </div>
-            <div style={{ border: `1px solid ${BORDER}`, display: "flex", flexDirection: "column" }}>
-              {[formatDateDMY(doc.date), doc.number, formatDateDMY(doc.validUntil)].map((value, i) => (
-                <div
-                  key={i}
-                  style={{
-                    height: 22,
-                    minWidth: 110,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderTop: i > 0 ? `1px solid ${BORDER}` : "none",
-                    padding: "0 8px",
-                  }}
-                >
-                  {value}
-                </div>
-              ))}
-            </div>
-          </div>
+          <table style={{ fontSize: 10, borderCollapse: "collapse" }}>
+            <tbody>
+              <tr>
+                <td style={{ border: "none", padding: "5px 8px 6px", fontWeight: 700, textAlign: "right" }}>DATE</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.date)}</td>
+              </tr>
+              <tr>
+                <td style={{ border: "none", padding: "5px 8px 6px", fontWeight: 700, textAlign: "right" }}>QUOTE #</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{doc.number}</td>
+              </tr>
+              <tr>
+                <td style={{ border: "none", padding: "5px 8px 6px", fontWeight: 700, textAlign: "right" }}>VALID UNTIL</td>
+                <td style={{ border: `1px solid ${BORDER}`, padding: "5px 8px 6px", textAlign: "center" }}>{formatDateDMY(doc.validUntil)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         {/* company block */}
@@ -221,146 +176,73 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
           </div>
         )}
 
-        {/* items grid (Sub Total/CGST/SGST/GST are extra rows in the same grid, below) —
-            built from <div>s (see COL_WIDTH/GridRow/GridCell above), not a <table>. */}
-        {(() => {
-          const columns =
-            variant === "product"
-              ? [
-                  { key: "sno", label: "S.No", align: "center" },
-                  { key: "description", label: "DESCRIPTION", align: "left" },
-                  { key: "make", label: "Make", align: "center" },
-                  { key: "hsn", label: "HSN", align: "center" },
-                  { key: "uom", label: "UOM", align: "center" },
-                  { key: "qty", label: "QTY", align: "center" },
-                  { key: "rate", label: "RATE", align: "center" },
-                  { key: "gst", label: "GST", align: "center" },
-                  { key: "amount", label: "AMOUNT", align: "right" },
-                ]
-              : variant === "service_terms"
-              ? [
-                  { key: "sno", label: "S.No", align: "center" },
-                  { key: "description", label: "DESCRIPTION", align: "left" },
-                  { key: "hsn", label: "HSN", align: "center" },
-                  { key: "uom", label: "UOM", align: "center" },
-                  { key: "qty", label: "QTY", align: "center" },
-                  { key: "rate", label: "RATE", align: "center" },
-                  { key: "gst", label: "GST", align: "center" },
-                  { key: "amount", label: "AMOUNT", align: "right" },
-                ]
-              : [
-                  { key: "description", label: "DESCRIPTION", align: "left" },
-                  { key: "qty", label: "Qty", align: "center" },
-                  { key: "basis", label: doc.basisColumnLabel || "PER TR", align: "center" },
-                  { key: "rate", label: "Rate", align: "center" },
-                  { key: "gst", label: "GST", align: "center" },
-                  { key: "amount", label: "AMOUNT", align: "right" },
-                ];
-          const cols = columns.map((c) => COL_WIDTH[c.key]).join(" ");
-
-          return (
-            <div style={{ border: `1px solid ${BORDER}`, borderBottom: "none", marginTop: 5 }}>
-              <GridRow cols={cols} style={{ background: ACCENT, color: "#fff" }}>
-                {columns.map((c, i) => (
-                  <GridCell key={c.key} align={c.align} last={i === columns.length - 1} style={{ fontSize: 9.5 }}>
-                    {c.label}
-                  </GridCell>
-                ))}
-              </GridRow>
-
-              {items.map((it, rowIdx) => (
-                <GridRow cols={cols} key={rowIdx}>
-                  {columns.map((c, i) => {
-                    let content;
-                    switch (c.key) {
-                      case "sno":
-                        content = rowIdx + 1;
-                        break;
-                      case "description":
-                        content = it.description;
-                        break;
-                      case "make":
-                        content = it.make;
-                        break;
-                      case "hsn":
-                        content = it.hsn;
-                        break;
-                      case "uom":
-                        content = it.unit;
-                        break;
-                      case "qty":
-                        content = it.qty;
-                        break;
-                      case "basis":
-                        content = it.basis;
-                        break;
-                      case "rate":
-                        content = Number(it.rate).toFixed(2);
-                        break;
-                      case "gst":
-                        content = `${it.gstRate ?? gstRate}%`;
-                        break;
-                      case "amount":
-                        content = formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? gstRate) / 100));
-                        break;
-                      default:
-                        content = null;
-                    }
-                    return (
-                      <GridCell
-                        key={c.key}
-                        align={c.align}
-                        last={i === columns.length - 1}
-                        style={c.key === "amount" ? { whiteSpace: "nowrap" } : undefined}
-                      >
-                        {content}
-                      </GridCell>
-                    );
-                  })}
-                </GridRow>
-              ))}
-
-              {summaryRows.map(([label, value], i) => (
-                <div
-                  key={label}
+        {/* items table (Sub Total/CGST/SGST/GST are extra rows in this same table, below) */}
+        <table style={{ width: "100%", fontSize: 9.5, borderCollapse: "collapse", marginTop: 5 }}>
+          <thead>
+            <tr style={{ background: ACCENT, color: "#fff" }}>
+              {variant !== "service_breakdown" && <th style={th({ width: 26 })}>S.No</th>}
+              <th style={th({ textAlign: "left" })}>DESCRIPTION</th>
+              {variant === "product" && <th style={th()}>Make</th>}
+              {variant !== "service_breakdown" && <th style={th()}>HSN</th>}
+              {(variant === "product" || variant === "service_terms") && <th style={th()}>UOM</th>}
+              <th style={th()}>{variant === "service_breakdown" ? "Qty" : "QTY"}</th>
+              {variant === "service_breakdown" && <th style={th()}>{doc.basisColumnLabel || "PER TR"}</th>}
+              <th style={th()}>{variant === "service_breakdown" ? "Rate" : "RATE"}</th>
+              <th style={th()}>GST</th>
+              <th style={th({ textAlign: "right" })}>AMOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((it, i) => (
+              <tr key={i}>
+                {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{i + 1}</td>}
+                <td style={td()}>{it.description}</td>
+                {variant === "product" && <td style={td({ textAlign: "center" })}>{it.make}</td>}
+                {variant !== "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.hsn}</td>}
+                {(variant === "product" || variant === "service_terms") && <td style={td({ textAlign: "center" })}>{it.unit}</td>}
+                <td style={td({ textAlign: "center" })}>{it.qty}</td>
+                {variant === "service_breakdown" && <td style={td({ textAlign: "center" })}>{it.basis}</td>}
+                <td style={td({ textAlign: "center" })}>{Number(it.rate).toFixed(2)}</td>
+                <td style={td({ textAlign: "center" })}>{it.gstRate ?? gstRate}%</td>
+                <td style={td({ textAlign: "right", whiteSpace: "nowrap" })}>
+                  {formatINR(Number(it.qty) * Number(it.rate) * (1 + (it.gstRate ?? gstRate) / 100))}
+                </td>
+              </tr>
+            ))}
+            {summaryRows.map(([label, value], i) => (
+              <tr key={label}>
+                <td
+                  colSpan={colCount - 1}
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: cols,
+                    border: "none",
                     borderTop: i === 0 ? `1px solid ${BORDER}` : "none",
+                    padding: "4px 7px",
+                    verticalAlign: "middle",
+                    textAlign: "right",
+                    fontWeight: label.startsWith("Sub") ? 700 : 500,
+                    fontSize: 10,
                   }}
                 >
-                  <div
-                    style={{
-                      gridColumn: `1 / ${columns.length}`,
-                      padding: "3px 7px",
-                      textAlign: "right",
-                      fontWeight: label.startsWith("Sub") ? 700 : 500,
-                      fontSize: 10,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    {label}
-                  </div>
-                  <div
-                    style={{
-                      padding: "3px 7px",
-                      whiteSpace: "nowrap",
-                      fontWeight: label.startsWith("Sub") ? 700 : 500,
-                      fontSize: 10,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    {formatINR(value)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
+                  {label}
+                </td>
+                <td
+                  style={{
+                    border: "none",
+                    borderTop: i === 0 ? `1px solid ${BORDER}` : "none",
+                    padding: "4px 7px",
+                    verticalAlign: "middle",
+                    textAlign: "right",
+                    whiteSpace: "nowrap",
+                    fontWeight: label.startsWith("Sub") ? 700 : 500,
+                    fontSize: 10,
+                  }}
+                >
+                  {formatINR(value)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* below-table: terms/work-breakup on the left, amount-in-words + total + stamp + bank on the right */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, marginTop: 8, alignItems: "flex-start" }}>
@@ -401,32 +283,23 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
                 >
                   TERMS AND CONDITION
                 </div>
-                <div style={{ border: `1px solid ${BORDER}` }}>
-                  {[
-                    ["Payment Terms", doc.terms?.paymentTerms],
-                    ["Delivery Time", doc.terms?.deliveryTime],
-                    ["Taxes", doc.terms?.taxes],
-                    ["Packing and Forwardings", doc.terms?.packingForwarding],
-                    ["Freight/Transportation", doc.terms?.freightTransportation],
-                    ["Offer validity", doc.terms?.offerValidity],
-                  ].map(([label, value], i) => (
-                    <div
-                      key={label}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "42% 58%",
-                        borderTop: i > 0 ? `1px solid ${BORDER}` : "none",
-                      }}
-                    >
-                      <div style={{ borderRight: `1px solid ${BORDER}`, padding: "3px 6px", fontSize: 9.5, fontWeight: 700, minHeight: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {label}
-                      </div>
-                      <div style={{ padding: "3px 6px", fontSize: 9.5, minHeight: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <table style={{ width: "100%", fontSize: 9.5, borderCollapse: "collapse" }}>
+                  <tbody>
+                    {[
+                      ["Payment Terms", doc.terms?.paymentTerms],
+                      ["Delivery Time", doc.terms?.deliveryTime],
+                      ["Taxes", doc.terms?.taxes],
+                      ["Packing and Forwardings", doc.terms?.packingForwarding],
+                      ["Freight/Transportation", doc.terms?.freightTransportation],
+                      ["Offer validity", doc.terms?.offerValidity],
+                    ].map(([label, value]) => (
+                      <tr key={label}>
+                        <td style={td({ fontWeight: 700, width: "42%", textAlign: "center" })}>{label}</td>
+                        <td style={td({ textAlign: "center" })}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                 <div
                   style={{
                     fontWeight: 700,
@@ -471,20 +344,8 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
 
           <div style={{ width: "45%", flexShrink: 0 }}>
             {/* amount-in-words sits to the LEFT of the total box, same row */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 0 }}>
-              <div
-                style={{
-                  fontSize: 9,
-                  lineHeight: 1.25,
-                  flex: 1,
-                  border: `1px solid ${BORDER}`,
-                  borderRight: "none",
-                  padding: "6px 8px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                }}
-              >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "stretch", gap: 8 }}>
+              <div style={{ fontSize: 9, lineHeight: 1.25, flex: 1 }}>
                 <span style={{ fontWeight: 700 }}>Amount Chargeable(in words)-INR-</span>
                 <br />
                 {doc.amountInWords}
