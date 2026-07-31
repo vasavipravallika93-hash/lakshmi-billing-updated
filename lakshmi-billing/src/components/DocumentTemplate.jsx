@@ -19,8 +19,8 @@ import defaultStamp from "../assets/stamp.png";
 
 const GREEN = "#1ba64b";
 
-const th = (extra) => ({ border: `1px solid ${GREEN}`, padding: "5px 8px", lineHeight: 1.25, ...extra });
-const td = (extra) => ({ border: "1px solid #ddd", padding: "5px 8px", lineHeight: 1.3, verticalAlign: "top", ...extra });
+const th = (extra) => ({ border: "1px solid #000", padding: "5px 8px", lineHeight: 1.25, ...extra });
+const td = (extra) => ({ border: "1px solid #000", padding: "5px 8px", lineHeight: 1.3, verticalAlign: "top", ...extra });
 
 const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
   const company = doc.company || {};
@@ -31,7 +31,6 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
   if (type === "proforma") {
     return (
       <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", padding: 46 }}>
-      <div style={{ border: "2px solid #000", boxSizing: "border-box", padding: 12 }}>
       <div
         style={{
           color: "#0f1a14",
@@ -44,7 +43,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       >
         {/* header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 20 }}>
-          <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 46, objectFit: "contain" }} />
+          <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 64, objectFit: "contain" }} />
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 24, fontWeight: 700, color: GREEN, marginBottom: 4 }}>Pro Forma Invoice</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: GREEN, lineHeight: 1.55 }}>
@@ -194,34 +193,26 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
               <span>{formatINR(doc.total)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "center", marginTop: 10 }}>
-              <img src={company.stampDataUrl || defaultStamp} alt="stamp and signature" style={{ height: 66, objectFit: "contain" }} />
+              <div style={{ textAlign: "center", width: 190 }}>
+                <img
+                  src={company.stampDataUrl || defaultStamp}
+                  alt="stamp and signature"
+                  style={{ height: 66, objectFit: "contain", margin: "0 auto 4px" }}
+                />
+                <div style={{ fontSize: 11, fontWeight: 700, borderTop: "1px solid #000", paddingTop: 4 }}>Authorised Signatory</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div style={{ background: "#d9d9d9", fontSize: 10.5, padding: "6px 8px", marginTop: 10, lineHeight: 1.3 }}>
+        <div style={{ background: "#d9d9d9", fontSize: 10.5, padding: "6px 8px", marginTop: 10, lineHeight: 1.3, textAlign: "right" }}>
           We declare that this invoice shows the actual price of the goods described and that all particulars are true and
           correct.
         </div>
 
-        <div
-          style={{
-            background: "#d9d9d9",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "6px 12px",
-            marginTop: 5,
-            fontSize: 11,
-          }}
-        >
-          <div>This is a Computer Generated Invoice</div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontWeight: 700, fontSize: 12.5 }}>{company.companyName}</div>
-            <div style={{ fontSize: 11 }}>Authorised Signatory</div>
-          </div>
+        <div style={{ background: "#d9d9d9", textAlign: "center", padding: "6px 12px", marginTop: 5, fontSize: 11 }}>
+          This is a Computer Generated Invoice
         </div>
-      </div>
       </div>
       </div>
     );
@@ -230,7 +221,6 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
   // ---- invoice (default) ----
   return (
     <div ref={ref} style={{ background: "#fff", width: 794, boxSizing: "border-box", padding: 46 }}>
-      <div style={{ border: "2px solid #000", boxSizing: "border-box", padding: 12 }}>
     <div
       style={{
         color: "#0f1a14",
@@ -243,8 +233,8 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
     >
       {/* header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 42, objectFit: "contain" }} />
-        <div style={{ fontSize: 30, fontWeight: 700, color: GREEN, letterSpacing: 1 }}>INVOICE</div>
+        <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 64, objectFit: "contain" }} />
+        <div style={{ fontSize: 26, fontWeight: 700, color: GREEN, letterSpacing: 1 }}>TAX INVOICE</div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, gap: 20 }}>
@@ -340,7 +330,6 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              background: "#dce8f0",
               padding: "4px 8px",
               fontSize: 11.5,
               fontWeight: 700,
@@ -354,7 +343,6 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              background: "#dce8f0",
               padding: "4px 8px",
               fontSize: 11.5,
               fontWeight: 700,
@@ -368,7 +356,6 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              background: "#dce8f0",
               padding: "4px 8px",
               fontSize: 11.5,
               fontWeight: 700,
@@ -382,7 +369,6 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              background: "#dce8f0",
               padding: "4px 8px",
               fontSize: 11.5,
               fontWeight: 700,
@@ -424,16 +410,7 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         </div>
       </div>
 
-      <div
-        style={{
-          borderTop: `2px solid ${GREEN}`,
-          marginTop: 10,
-          paddingTop: 6,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 10.5, fontWeight: 700 }}>
           {company.phone}
           {company.phone && company.email ? ", " : ""}
@@ -441,11 +418,11 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
         </div>
         <div style={{ fontStyle: "italic", fontWeight: 700, fontSize: 12 }}>Thank You For Your Business!</div>
       </div>
+      <div style={{ borderTop: `2px solid ${GREEN}`, marginTop: 6 }} />
 
       <div style={{ textAlign: "center", fontSize: 9.5, color: "rgba(0,0,0,0.6)", padding: "6px 0" }}>
         This is Computer Generated Invoice
       </div>
-    </div>
     </div>
     </div>
   );
