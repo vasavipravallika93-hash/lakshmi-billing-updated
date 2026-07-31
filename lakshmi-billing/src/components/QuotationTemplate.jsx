@@ -296,8 +296,8 @@ const QuotationTemplate = React.forwardRef(({ doc }, ref) => {
                       ["Offer validity", doc.terms?.offerValidity],
                     ].map(([label, value]) => (
                       <tr key={label}>
-                        <td style={td({ fontWeight: 700, width: "42%", textAlign: "center" })}>{label}</td>
-                        <td style={td({ textAlign: "center" })}>{value}</td>
+                        <td style={td({ fontWeight: 700, width: "42%", textAlign: "left" })}>{label}</td>
+                        <td style={td({ textAlign: "left" })}>{value}</td>
                       </tr>
                     ))}
                   </tbody>
