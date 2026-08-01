@@ -1,10 +1,13 @@
-# Supabase Setup — Customers & Products
+# Supabase Setup — Customers, Products, Settings & Saved PDFs
 
-Customers and Products are stored in [Supabase](https://supabase.com) — a
-free, hosted Postgres database — instead of the browser's local storage.
-This means they're the same on every device/browser you use, not tied to
-one computer. (Quotations, Proforma Invoices, and Invoices still save
-locally on whichever device generated them, same as before.)
+Customers, Products, Company Settings (including the ISO number), and PDF
+files saved via "Save PDF to Cloud" are stored in
+[Supabase](https://supabase.com) — a free, hosted Postgres database plus
+file storage — instead of the browser's local storage. This means they're
+the same on every device/browser you use, not tied to one computer.
+(Quotations, Proforma Invoices, and Invoices themselves — the structured
+records, not the exported PDF file — still save locally on whichever
+device generated them, same as before.)
 
 Takes about 5 minutes, free tier is plenty for this.
 
@@ -23,7 +26,8 @@ Takes about 5 minutes, free tier is plenty for this.
    paste it into the SQL editor
 3. Click **Run** (or Ctrl/Cmd+Enter)
 4. You should see "Success. No rows returned" — this created the
-   `customers` and `products` tables
+   `customers`, `products`, and `company_settings` tables, plus a
+   `documents` storage bucket for PDFs saved via "Save PDF to Cloud"
 
 ## Step 3 — Get your API keys
 1. Go to **Project Settings** (gear icon) → **API**
@@ -69,8 +73,11 @@ data to a verified user), that's a bigger change involving Supabase Auth —
 let me know if you want that built later.
 
 ## What's NOT in Supabase
-Quotations, Proforma Invoices, and Invoices still save to the browser's
-local storage on whichever device generated them (same as the rest of this
-app). Only Customers and Products moved to Supabase. If you want those
-moved too later so they're accessible from any device, that's a
-straightforward extension of this same setup — just say the word.
+Quotations, Proforma Invoices, and Invoices — the structured records (line
+items, customer, totals, etc.) — still save to the browser's local storage
+on whichever device generated them. Only the exported *PDF file* goes to
+Supabase Storage, and only when you click "Save PDF to Cloud" — it's
+optional, not automatic. If you want the structured records themselves
+moved to Supabase too (so opening the app on a different device shows your
+full quotation/invoice history, not just the PDFs), that's a bigger but
+doable extension of this same setup — just say the word.

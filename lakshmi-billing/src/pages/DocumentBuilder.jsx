@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { db, uid, calcTotals, amountInWords, formatINR } from "../lib/storage";
 import { verifyDocument } from "../lib/verify";
-import { downloadNodeAsPdf, nodeToPdfBase64 } from "../lib/pdf";
+import { downloadNodeAsPdf, uploadNodeAsPdf, uploadNodeToGoogleDrive, nodeToPdfBase64 } from "../lib/pdf";
 import { appsScript } from "../lib/appsScript";
 import DocumentTemplate from "../components/DocumentTemplate";
 import VerifyModal from "../components/VerifyModal";
@@ -20,6 +20,7 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
   const [items] = useState(sourceDoc?.items || []);
   const [gstRatePct, setGstRatePct] = useState(sourceDoc?.gstRate ?? settings.gstRate);
   const [manualNumber, setManualNumber] = useState("");
+  const [duplicateCopy, setDuplicateCopy] = useState(false);
   const [savedDoc, setSavedDoc] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
   const [downloading, setDownloading] = useState(false);
@@ -44,6 +45,7 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
       company: settings,
       status: type === "invoice" ? "Unpaid" : "Draft",
       sourceNumber: sourceDoc?.number,
+      duplicateCopyForTransport: type === "invoice" ? duplicateCopy : false,
       createdAt: new Date().toISOString(),
     };
   }
@@ -100,6 +102,16 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
     } finally {
       setDownloading(false);
     }
+  }
+
+  async function handleSaveToCloud() {
+    if (!printRef.current) throw new Error("Nothing to save yet.");
+    return uploadNodeAsPdf(printRef.current, `${type}s/${savedDoc.number.replace(/\//g, "-")}.pdf`);
+  }
+
+  async function handleSaveToGoogleDrive() {
+    if (!printRef.current) throw new Error("Nothing to save yet.");
+    return uploadNodeToGoogleDrive(printRef.current, `${savedDoc.number.replace(/\//g, "-")}.pdf`);
   }
 
   return (
@@ -163,6 +175,27 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
                 />
               </div>
             </div>
+
+            {type === "invoice" && (
+              <label className="flex items-center gap-2.5 mt-4 pt-4 border-t border-ink/10 cursor-pointer select-none w-fit">
+                <span
+                  onClick={() => setDuplicateCopy((v) => !v)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${
+                    duplicateCopy ? "bg-brand-500" : "bg-ink/15"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 mt-0.5 ml-0.5 rounded-full bg-white shadow transition-transform ${
+                      duplicateCopy ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </span>
+                <span className="text-sm">
+                  Mark as <strong>"(Duplicate copy for transport)"</strong> — adds that label to the top-right of the
+                  printed invoice
+                </span>
+              </label>
+            )}
           </div>
 
           <div className="bg-white rounded-xl2 shadow-card p-5">
@@ -247,6 +280,8 @@ export default function DocumentBuilder({ type, sourceDoc, onSaved }) {
           result={verifyResult}
           downloading={downloading}
           onDownload={handleDownload}
+          onSaveToCloud={handleSaveToCloud}
+          onSaveToGoogleDrive={handleSaveToGoogleDrive}
           onClose={() => setVerifyResult(null)}
         />
       )}

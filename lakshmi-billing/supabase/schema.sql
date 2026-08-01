@@ -29,6 +29,17 @@ create table if not exists products (
   updated_at timestamptz default now()
 );
 
+-- Company Settings (company details, logo/stamp, ISO number, bank info,
+-- document prefixes, default terms & conditions, etc). Stored as one JSON
+-- blob in a single row (id = 'default') rather than a column per field —
+-- simplest way to keep this in sync across devices without a migration
+-- every time a new settings field gets added.
+create table if not exists company_settings (
+  id text primary key default 'default',
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now()
+);
+
 -- Keep updated_at current on every change.
 create or replace function set_updated_at()
 returns trigger as $$
@@ -48,6 +59,11 @@ create trigger products_set_updated_at
   before update on products
   for each row execute function set_updated_at();
 
+drop trigger if exists company_settings_set_updated_at on company_settings;
+create trigger company_settings_set_updated_at
+  before update on company_settings
+  for each row execute function set_updated_at();
+
 -- Row Level Security: this app has a single owner and its own login screen
 -- (not Supabase Auth), so requests come in using the public "anon" key.
 -- These policies allow that key to read/write freely. This is appropriate
@@ -55,6 +71,7 @@ create trigger products_set_updated_at
 -- — do not commit your real .env to a public GitHub repo.
 alter table customers enable row level security;
 alter table products enable row level security;
+alter table company_settings enable row level security;
 
 drop policy if exists "customers_all_access" on customers;
 create policy "customers_all_access" on customers
@@ -63,3 +80,21 @@ create policy "customers_all_access" on customers
 drop policy if exists "products_all_access" on products;
 create policy "products_all_access" on products
   for all using (true) with check (true);
+
+drop policy if exists "company_settings_all_access" on company_settings;
+create policy "company_settings_all_access" on company_settings
+  for all using (true) with check (true);
+
+-- Storage bucket for exported PDFs (quotations/proformas/invoices), used by
+-- the "Save to Cloud" button next to Download PDF. Public bucket — same
+-- single-owner security model as the rest of this app (nobody can browse
+-- your files without the exact link, and the app's URL/key aren't public).
+-- If you'd rather keep these private, make the bucket public=false here and
+-- ask to switch the app over to signed URLs instead.
+insert into storage.buckets (id, name, public)
+values ('documents', 'documents', true)
+on conflict (id) do nothing;
+
+drop policy if exists "documents_all_access" on storage.objects;
+create policy "documents_all_access" on storage.objects
+  for all using (bucket_id = 'documents') with check (bucket_id = 'documents');

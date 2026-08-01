@@ -1,9 +1,14 @@
-import React from "react";
-import { CheckCircle2, XCircle, Download, ShieldCheck } from "lucide-react";
+import React, { useState } from "react";
+import { CheckCircle2, XCircle, Download, ShieldCheck, UploadCloud, Copy, Check } from "lucide-react";
 
-export default function VerifyModal({ result, onDownload, onClose, downloading }) {
+export default function VerifyModal({ result, onDownload, onSaveToCloud, onSaveToGoogleDrive, onClose, downloading }) {
   if (!result) return null;
   const { checks, passed, total, complete } = result;
+
+  const uploadTargets = [
+    onSaveToCloud && { key: "supabase", label: "Save PDF to Cloud", onUpload: onSaveToCloud },
+    onSaveToGoogleDrive && { key: "gdrive", label: "Save to Google Drive", onUpload: onSaveToGoogleDrive },
+  ].filter(Boolean);
 
   return (
     <div className="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 grid place-items-center p-4">
@@ -53,10 +58,68 @@ export default function VerifyModal({ result, onDownload, onClose, downloading }
             {downloading ? "Preparing PDF…" : "Download PDF"}
           </button>
         </div>
+
+        {uploadTargets.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {uploadTargets.map((t) => (
+              <UploadTargetButton key={t.key} label={t.label} onUpload={t.onUpload} />
+            ))}
+          </div>
+        )}
+
         <p className="text-[11px] text-ink/40 mt-3 text-center">
-          Saved to your device only — no cloud database is used in this free version.
+          Download saves to your device. The cloud buttons above also upload a copy — free, and accessible via the
+          link from any device.
         </p>
       </div>
+    </div>
+  );
+}
+
+function UploadTargetButton({ label, onUpload }) {
+  const [state, setState] = useState("idle"); // idle | working | done | fail
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  async function handleClick() {
+    setState("working");
+    setError("");
+    try {
+      const resultUrl = await onUpload();
+      setUrl(resultUrl);
+      setState("done");
+    } catch (err) {
+      setError(err.message || "Upload failed.");
+      setState("fail");
+    }
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={state === "working"}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 disabled:opacity-60"
+      >
+        <UploadCloud size={15} />
+        {state === "working" ? "Uploading…" : state === "done" ? `${label} ✓` : label}
+      </button>
+      {state === "done" && (
+        <div className="flex items-center gap-2 mt-2 bg-brand-50 border border-brand-200 rounded-lg px-3 py-2">
+          <input readOnly value={url} className="flex-1 bg-transparent text-xs text-brand-700 outline-none" />
+          <button onClick={copyLink} className="text-brand-600 hover:text-brand-700 shrink-0">
+            {copied ? <Check size={15} /> : <Copy size={15} />}
+          </button>
+        </div>
+      )}
+      {state === "fail" && <p className="text-xs text-red-500 mt-2">{error}</p>}
     </div>
   );
 }

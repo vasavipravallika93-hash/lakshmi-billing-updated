@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { db } from "../lib/storage";
+import { settingsApi } from "../lib/settingsApi";
 import { appsScript } from "../lib/appsScript";
 import { Save, Download, Upload, Trash2, PlugZap, CheckCircle2, XCircle, CloudUpload, CloudDownload } from "lucide-react";
 
@@ -8,6 +9,34 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [cloudState, setCloudState] = useState("idle"); // idle | working | done | fail
   const [cloudMessage, setCloudMessage] = useState("");
+  const [settingsSyncState, setSettingsSyncState] = useState("idle"); // idle | loading | synced | fail
+
+  // Company Settings (incl. ISO number) live in Supabase, same as
+  // Customers/Products — so they're the same on every device. On load,
+  // pull the latest from Supabase and use it as the source of truth,
+  // falling back to whatever's cached locally if Supabase has nothing yet
+  // or isn't reachable.
+  useEffect(() => {
+    let cancelled = false;
+    setSettingsSyncState("loading");
+    settingsApi
+      .get()
+      .then((remote) => {
+        if (cancelled) return;
+        if (remote) {
+          const merged = { ...db.getSettings(), ...remote };
+          setForm(merged);
+          db.saveSettings(merged);
+        }
+        setSettingsSyncState("synced");
+      })
+      .catch(() => {
+        if (!cancelled) setSettingsSyncState("fail");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Customers & Products now live in Supabase (always in sync across
   // devices already) — this Push/Restore pair only concerns Quotations,
@@ -74,6 +103,12 @@ export default function Settings() {
     db.saveSettings(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    settingsApi.save(form).catch(() => {
+      // Non-fatal — local save above already succeeded. Most likely cause:
+      // Supabase isn't configured, or the company_settings table hasn't
+      // been created yet (see supabase/schema.sql).
+      setSettingsSyncState("fail");
+    });
   }
   function handleLogo(e) {
     const file = e.target.files[0];
@@ -125,7 +160,17 @@ export default function Settings() {
   return (
     <div className="max-w-2xl">
       <h1 className="font-display font-bold text-2xl mb-1">Settings</h1>
-      <p className="text-ink/50 text-sm mb-6">Company details used on every generated document.</p>
+      <p className="text-ink/50 text-sm mb-1">Company details used on every generated document.</p>
+      <p className="text-xs mb-6">
+        {settingsSyncState === "loading" && <span className="text-ink/40">Checking Supabase for saved settings…</span>}
+        {settingsSyncState === "synced" && <span className="text-brand-600">✓ Synced with Supabase — same on every device.</span>}
+        {settingsSyncState === "fail" && (
+          <span className="text-red-500">
+            Couldn't reach Supabase — saved locally to this device only. Run the <code>company_settings</code> table
+            from <code>supabase/schema.sql</code> if you haven't yet.
+          </span>
+        )}
+      </p>
 
       <form onSubmit={save} className="bg-white rounded-xl2 shadow-card p-6 space-y-4">
         <div className="flex items-center gap-4">

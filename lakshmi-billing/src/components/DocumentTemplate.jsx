@@ -234,7 +234,12 @@ const DocumentTemplate = React.forwardRef(({ doc, type }, ref) => {
       {/* header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <img src={company.logoDataUrl || defaultLogo} alt="logo" style={{ height: 64, objectFit: "contain" }} />
-        <div style={{ fontSize: 26, fontWeight: 700, color: GREEN, letterSpacing: 1 }}>TAX INVOICE</div>
+        <div style={{ textAlign: "right" }}>
+          {doc.duplicateCopyForTransport && (
+            <div style={{ fontSize: 10.5, fontWeight: 700, marginBottom: 3 }}>(Duplicate copy for transport)</div>
+          )}
+          <div style={{ fontSize: 26, fontWeight: 700, color: GREEN, letterSpacing: 1 }}>TAX INVOICE</div>
+        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, gap: 20 }}>

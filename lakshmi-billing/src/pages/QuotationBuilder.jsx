@@ -3,7 +3,7 @@ import { db, uid, amountInWords, formatINR } from "../lib/storage";
 import { customersApi } from "../lib/customersApi";
 import { productsApi } from "../lib/productsApi";
 import { verifyDocument } from "../lib/verify";
-import { downloadNodeAsPdf } from "../lib/pdf";
+import { downloadNodeAsPdf, uploadNodeAsPdf, uploadNodeToGoogleDrive } from "../lib/pdf";
 import { appsScript } from "../lib/appsScript";
 import QuotationTemplate from "../components/QuotationTemplate";
 import VerifyModal from "../components/VerifyModal";
@@ -154,6 +154,16 @@ export default function QuotationBuilder({ onSaved }) {
     } finally {
       setDownloading(false);
     }
+  }
+
+  async function handleSaveToCloud() {
+    if (!printRef.current) throw new Error("Nothing to save yet.");
+    return uploadNodeAsPdf(printRef.current, `quotations/${savedDoc.number.replace(/\//g, "-")}.pdf`);
+  }
+
+  async function handleSaveToGoogleDrive() {
+    if (!printRef.current) throw new Error("Nothing to save yet.");
+    return uploadNodeToGoogleDrive(printRef.current, `${savedDoc.number.replace(/\//g, "-")}.pdf`);
   }
 
   return (
@@ -466,6 +476,8 @@ export default function QuotationBuilder({ onSaved }) {
           result={verifyResult}
           downloading={downloading}
           onDownload={handleDownload}
+          onSaveToCloud={handleSaveToCloud}
+          onSaveToGoogleDrive={handleSaveToGoogleDrive}
           onClose={() => setVerifyResult(null)}
         />
       )}
